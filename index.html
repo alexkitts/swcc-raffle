@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>South Wingfield Cricket Club Raffle</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="logo">
+        <img src="./images/logo.png" alt="SWCC Logo">
+    </div>
+    <div class="csv-controls">
+        <input type="file" id="csv-upload" accept=".csv" style="display: none;">
+        <button id="upload-btn">📂 Upload CSV</button>
+        <a href="./template.csv" download="template.csv" id="template-link">📥 Download Template</a>
+    </div>
+    <div class="main-content">
+        <h1>🏏 SWCC REVERSE RAFFLE DRAW 🏏</h1>
+        <button id="throw" class="bowlbutton" disabled>Bowl Ball</button>
+        <div id="upload-message" class="upload-message">
+            <h2>🏏 Welcome to the SWCC Reverse Raffle Draw! 🏏</h2>
+            <p>To get started:</p>
+            <ol>
+                <li>📥 <strong>Download the template</strong> (top right corner)</li>
+                <li>✏️ <strong>Add your players</strong> (Name, Number format)</li>
+                <li>📂 <strong>Upload your CSV</strong> to begin the draw!</li>
+            </ol>
+        </div>
+        <table class="players" id="players">
+            <!-- Table will be populated by JavaScript -->
+        </table>
+        <div class="ball" id="ball"></div>
+    </div>
+    
+    <div class="scoreboard">
+        <div class="scoreboard-header">SCOREBOARD</div>
+        <div class="scoreboard-stats">
+            <div>WICKETS: <span id="wicket-count">0</span>/<span id="total-count">0</span></div>
+            <div>REMAINING: <span id="remaining-count">0</span></div>
+        </div>
+        <div class="scoreboard-content" id="scoreboard-content">
+            <div style="text-align: center; color: #666; font-style: italic; margin-top: 20px;">
+                Wickets will appear here...
+            </div>
+        </div>
+    </div>
+</body>
+</html>

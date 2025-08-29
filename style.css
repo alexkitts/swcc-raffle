@@ -1,0 +1,384 @@
+body {
+    font-family: 'Courier New', monospace;
+    background: #3b2c20;
+    text-align: center;
+    overflow: hidden;
+    margin: 0;
+    padding: 5px;
+    display: flex;
+    height: 100vh;
+}
+
+h1 {
+    color: #f9a825;
+    margin: 2px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    background: rgba(59, 44, 32, 0.8);
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.logo {
+    position: absolute;
+    top: 20px;
+    left: 45px;
+    z-index: 100;
+}
+
+.logo img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.main-content {
+    flex: 0 0 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: 10px;
+}
+
+.players {
+    font-family: 'Montserrat', Arial, sans-serif;
+    border-collapse: separate;
+    border-spacing: 8px;
+    margin: 5px 0;
+    width: 100%;
+    flex: 1;
+}
+
+.players td {
+    padding: 0;
+    border: 2px solid #3b2c20;
+    border-radius: 5px;
+    background: white;
+    transition: background 0.3s, transform 0.3s;
+    font-size: 16px;
+    font-weight: 800;
+    height: 60px;
+    width: 25px;
+    text-align: center;
+    vertical-align: middle;
+    color: black;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    z-index: 2;
+}
+
+.players td.out {
+    background: #f9a825;
+    color: white;
+    text-decoration: line-through;
+    opacity: 1;
+    transform: rotate(15deg) translateY(-30px);
+    border-color: #d68400;
+}
+
+/* Cricket Scoreboard */
+.scoreboard {
+    flex: 0 0 30%;
+    background: #2a1f17;
+    color: white;
+    border: 4px solid #f9a825;
+    font-family: 'Courier New', monospace;
+    height: calc(100vh - 10px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.scoreboard-header {
+    background: #f9a825;
+    color: #3b2c20;
+    padding: 8px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 2px solid #f9a825;
+}
+
+.scoreboard-content {
+    padding: 8px;
+    text-align: left;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.scoreboard-stats {
+    text-align: center;
+    padding: 6px;
+    border-bottom: 1px solid #5a4332;
+    font-size: 20px;
+    color: #f9a825;
+}
+
+.wicket-entry {
+    padding: 4px 4px;
+    border-bottom: 2px solid #5a4332;
+    font-size: 18px;
+}
+
+.wicket-entry:last-child {
+    border-bottom: none;
+}
+
+.ball {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    background: url('/images/ball.png') center/cover no-repeat;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+/* Cricket Popup Announcement */
+.wicket-popup {
+    position: fixed;
+    top: 7%;
+    left: 60%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #FF0000;
+    color: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 4px solid white;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    animation: popupAnimation 2s ease-out forwards;
+}
+
+@keyframes popupAnimation {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+        opacity: 1;
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+        opacity: 1;
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.05) rotate(1deg);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+}
+
+/* Button Styling */
+button {
+    background: #3b2c20;
+    color: #f9a825;
+    border: 2px solid #f9a825;
+    border-radius: 8px;
+    padding: 6px 6px;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover:not(:disabled) {
+    background: #f9a825;
+    color: #3b2c20;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Winner Banner */
+.winner-banner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #f9a825, #d68400);
+    color: white;
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    z-index: 2000;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    border: 6px solid white;
+    font-family: 'Courier New', monospace;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+    animation: winnerEntrance 2s ease-out forwards, winnerJiggle 3s ease-in-out 2s infinite;
+}
+
+.winner-banner .trophy {
+    font-size: 120px;
+    margin-bottom: 20px;
+    animation: trophyBounce 2s infinite;
+}
+
+.winner-banner .winner-text {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    letter-spacing: 3px;
+}
+
+.winner-banner .winner-details {
+    font-size: 32px;
+    font-weight: bold;
+    color: #3b2c20;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+@keyframes winnerEntrance {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.2) rotate(10deg);
+        opacity: 1;
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(1) rotate(-5deg);
+        opacity: 1;
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.05) rotate(2deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes winnerJiggle {
+    0%, 100% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+    25% {
+        transform: translate(-50%, -50%) rotate(2deg) scale(1.02);
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+    75% {
+        transform: translate(-50%, -50%) rotate(-2deg) scale(1.02);
+    }
+}
+
+@keyframes trophyBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-20px);
+    }
+    60% {
+        transform: translateY(-10px);
+    }
+}
+
+/* CSV Upload Controls */
+.csv-controls {
+    position: absolute;
+    top: 20px;
+    right: 35%;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#upload-btn, #template-link {
+    background: #3b2c20;
+    color: #f9a825;
+    border: 2px solid #f9a825;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+}
+
+#upload-btn:hover, #template-link:hover {
+    background: #f9a825;
+    color: #3b2c20;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.bowlbutton { 
+ z-index: 100;
+}
+
+/* Upload Message Styling */
+.upload-message {
+    background: rgba(59, 44, 32, 0.9);
+    color: #f9a825;
+    border: 3px solid #f9a825;
+    border-radius: 15px;
+    padding: 40px;
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.upload-message h2 {
+    color: #f9a825;
+    margin-bottom: 20px;
+    font-size: 28px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.upload-message p {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.upload-message ol {
+    text-align: left;
+    font-size: 16px;
+    color: white;
+    margin: 0 auto;
+    display: inline-block;
+}
+
+.upload-message li {
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.upload-message strong {
+    color: #f9a825;
+}
