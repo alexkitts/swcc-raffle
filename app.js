@@ -149,9 +149,18 @@ function displayPlayers() {
 
 // Function to update scoreboard display
 function updateScoreboardDisplay() {
-  totalCount.textContent = players.length;
   // Use actual alive count for consistency
   const alive = [...document.querySelectorAll("td.player:not(.out)")];
+  
+  // Check if we're in final 10 stage by looking for final-player class
+  const inFinalStage = document.querySelector('.final-player') !== null;
+  
+  if (inFinalStage) {
+    totalCount.textContent = '10'; // Show 10 as total in final stage
+  } else {
+    totalCount.textContent = players.length; // Show original total in regular stage
+  }
+  
   remainingCount.textContent = alive.length;
 }
 
@@ -374,9 +383,9 @@ function throwSingleBall(target) {
     // Show cricket-themed popup
     const playerNumber = target.dataset.number;
     
-    // Use different dismissal messages for single-ball mode (≤10 players remaining)
+    // Use different dismissal messages for single-ball mode (≤10 players remaining AFTER this elimination)
     const currentAlive = [...document.querySelectorAll("td.player:not(.out)")];
-    const isInFinalStage = currentAlive.length <= 10;
+    const isInFinalStage = (currentAlive.length - 1) < 10; // Only use final messages when going to 9 or fewer
     
     let dismissalType;
     if (isInFinalStage) {
@@ -605,3 +614,32 @@ function showAuctionPopup() {
     }
   };
 }
+
+// Prevent accidental page refresh
+window.addEventListener('beforeunload', function(e) {
+  // Only show warning if game is in progress (players loaded and some eliminations have happened)
+  if (players.length > 0 && wickets > 0) {
+    e.preventDefault();
+    e.returnValue = ''; // Chrome requires returnValue to be set
+    return 'Are you sure you want to leave? Your raffle progress will be lost!';
+  }
+});
+
+// Also prevent F5 refresh key
+document.addEventListener('keydown', function(e) {
+  // F5 key
+  if (e.key === 'F5') {
+    e.preventDefault();
+    if (players.length > 0 && wickets > 0) {
+      alert('Page refresh is disabled during the raffle to prevent accidental data loss!');
+    }
+  }
+  
+  // Ctrl+R refresh
+  if (e.ctrlKey && e.key === 'r') {
+    e.preventDefault();
+    if (players.length > 0 && wickets > 0) {
+      alert('Page refresh is disabled during the raffle to prevent accidental data loss!');
+    }
+  }
+});
