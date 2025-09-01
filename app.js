@@ -20,16 +20,9 @@ function getEliminations(remaining) {
     // Calculate exact eliminations needed to land on 10
     const eliminationsNeeded = remaining - 10;
     return [eliminationsNeeded, 1000];
-  } else if (remaining <= 30) {
-    // For 21-30, eliminate enough to get to around 15, then next round will get to 10
-    const eliminationsNeeded = Math.min(10, remaining - 15);
-    return [eliminationsNeeded, 600];
-  } else if (remaining <= 50) {
-    return [15, 600];
-  } else if (remaining <= 100) {
-    return [25, 500];
   } else {
-    return [40, 400];
+    // For all other cases (21+), eliminate 20 at a time with 1000ms delay
+    return [20, 1000];
   }
 }
 
