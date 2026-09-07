@@ -41,6 +41,75 @@
 
 .ticket--struck { transform: scale(1.2) rotate(15deg); }
 
+/* The crease: a fixed wicket the cards are presented to, below the shrunken final board */
+.crease {
+  position: relative;
+  flex: 0 0 38%;
+  width: 100%;
+  min-height: 0;
+}
+
+.stumps {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  height: 82%;
+  aspect-ratio: 3 / 4;
+  transform: translateX(-50%);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 40'%3E%3Cg fill='%23efe2bd' stroke='%238a6a3a' stroke-width='.6'%3E%3Crect x='4' y='4' width='4.2' height='36' rx='2.1'/%3E%3Crect x='12.9' y='4' width='4.2' height='36' rx='2.1'/%3E%3Crect x='21.8' y='4' width='4.2' height='36' rx='2.1'/%3E%3C/g%3E%3C/svg%3E")
+    center bottom / contain no-repeat;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5));
+}
+
+/* Where a presented card comes to rest as the bail, straddling the stumps */
+.bail-slot {
+  position: absolute;
+  left: 50%;
+  top: 1%;
+  width: 128%;
+  height: 19%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.stumps--hit { animation: stumpsFly 1.2s cubic-bezier(.2, .85, .3, 1) forwards; }
+
+@keyframes stumpsFly {
+  0%   { transform: translateX(-50%) rotate(0deg); }
+  12%  { transform: translateX(-46%) rotate(-9deg); }
+  100% { transform: translateX(120%) translateY(-40%) rotate(210deg); opacity: 0; }
+}
+
+/* The presented card is the live one; the flight itself is driven from animation.js */
+.board--final .ticket--live {
+  z-index: 6;
+  border-color: var(--gold);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .55), 0 0 0 4px rgba(249, 168, 37, .55);
+}
+
+/* The bail clone lives in the overlay layer, so it styles itself rather than inheriting the board */
+.ticket--bail {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: .7em;
+  padding: 0 10px;
+  border-radius: 6px;
+  border-color: var(--gold-dark);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .5);
+}
+
+.ticket--bail .ticket-name { font-size: clamp(.85rem, 1.2vw, 1.3rem); white-space: nowrap; color: var(--brown); }
+.ticket--bail .ticket-number { font-size: clamp(.95rem, 1.4vw, 1.5rem); color: var(--brown); }
+
+/* The original card while its clone is at the crease */
+.ticket--away { opacity: .32; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stumps--hit { animation: none; opacity: 0; }
+}
+
 /* Ticket #1 is reserved for the auction and cannot be bowled out until the final stage (R7). */
 /* An SVG shield, not the emoji, so it can be tinted; a background layer paints behind the number */
 .ticket--auction:not(.ticket--out) {
@@ -57,8 +126,8 @@
 .board--final .ticket--auction:not(.ticket--out) .ticket-number { color: var(--brown); }
 
 /* Final stage: fewer, bigger cells showing names. */
-/* Columns and rows still come from --cols/--rows; only the gap and cell contents differ */
-.board--final { gap: 12px; }
+/* Overflow is visible so the lifted card is not clipped; the body still clips at the viewport */
+.board--final { gap: 12px; overflow: visible; }
 
 .board--final .ticket { flex-direction: column; justify-content: center; gap: .3em; padding: 6px; }
 

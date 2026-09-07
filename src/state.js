@@ -20,7 +20,9 @@ const Store = (function () {
       round: null,
       usedFinalDismissals: [],
       auctionResolved: false,
-      loadSummary: null
+      loadSummary: null,
+      finalOrder: [],
+      spotlight: null
     };
   }
 
@@ -112,6 +114,17 @@ const Store = (function () {
     emit();
   }
 
+  // The drawn order the final-stage spotlight walks; set once, so a reload does not reshuffle
+  function setFinalOrder(order) {
+    state.finalOrder = order.slice();
+    emit();
+  }
+
+  function setSpotlight(number) {
+    state.spotlight = number;
+    emit();
+  }
+
   function endRound() {
     state.round = null;
     advancePhase();
@@ -151,7 +164,9 @@ const Store = (function () {
       round: null,   // an interrupted round is discarded; resume at a boundary
       usedFinalDismissals: (saved.usedFinalDismissals || []).slice(),
       auctionResolved: !!saved.auctionResolved,
-      loadSummary: saved.loadSummary || null
+      loadSummary: saved.loadSummary || null,
+      finalOrder: (saved.finalOrder || []).slice(),
+      spotlight: typeof saved.spotlight === 'number' ? saved.spotlight : null
     };
     gen++;
     advancePhase();
@@ -163,7 +178,7 @@ const Store = (function () {
     SCHEMA_VERSION,
     get, generation, subscribe, reset,
     loadTickets, setDropSize,
-    beginRound, eliminate, endRound,
+    beginRound, eliminate, endRound, setFinalOrder, setSpotlight,
     resolveAuction, skipAuction, hydrate,
     remaining, remainingTickets, wicketsThisStage, stageTotal, nextDrop, winner
   };

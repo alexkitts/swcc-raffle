@@ -38,3 +38,30 @@ test('the pools are non-empty and immutable', () => {
   assert.ok(Dismissals.FINAL.length > 0);
   assert.throws(() => Dismissals.REGULAR.push('x'));
 });
+
+test('every survival outcome has text and a ball path kind', () => {
+  const kinds = new Set(['wide', 'defended', 'single', 'four', 'six']);
+  assert.ok(Dismissals.SURVIVED.length >= 10);
+  Dismissals.SURVIVED.forEach(o => {
+    assert.ok(o.text && o.text.length > 0, 'missing text');
+    assert.ok(kinds.has(o.kind), 'unknown kind: ' + o.kind);
+  });
+});
+
+test('boundaries are rarer than defensive outcomes', () => {
+  const count = (k) => Dismissals.SURVIVED.filter(o => o.kind === k).length;
+  assert.ok(count('six') < count('wide'), 'sixes should be rarer than wides');
+  assert.ok(count('six') <= count('four'), 'sixes should be no commoner than fours');
+});
+
+test('pickSurvival returns one of the pool', () => {
+  for (let i = 0; i < 40; i++) {
+    const o = Dismissals.pickSurvival();
+    assert.ok(Dismissals.SURVIVED.includes(o));
+  }
+  assert.strictEqual(Dismissals.pickSurvival(() => 0), Dismissals.SURVIVED[0]);
+});
+
+test('the survival pool is immutable', () => {
+  assert.throws(() => Dismissals.SURVIVED.push({ text: 'x', kind: 'wide' }));
+});

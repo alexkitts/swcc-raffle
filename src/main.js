@@ -23,6 +23,107 @@
 
   // ---- the round loop (spec section 10) ----
 
+  async function bowlBulk(targets, startGen) {
+    for (let i = 0; i < targets.length; i++) {
+      if (Store.generation() !== startGen) return;
+      const number = targets[i];
+      const cell = Render.cellFor(number);
+
+      await Animation.throwBall(cell, Store.get().settings.ballMs);
+      if (Store.generation() !== startGen) return;
+
+      Animation.strike(cell);
+      Sound.wicket();
+      Store.eliminate(number);
+      announceWicket(2000);
+
+      if (i < targets.length - 1) await delay(Store.get().settings.interBallMs);
+    }
+  }
+
+  // The victim is already chosen fairly; this is the theatre laid over that decision
+  async function bowlSuspense(victim, startGen) {
+    const alive = new Set(Store.remainingTickets().map(t => t.number));
+    const order = Store.get().finalOrder.filter(n => alive.has(n));
+    const plan = Suspense.planSteps(order, Store.get().spotlight, victim);
+
+    if (!plan.length) {
+      Store.eliminate(victim);
+      announceWicket(10000);
+      return;
+    }
+
+    Animation.resetStumps();
+
+    for (const step of plan) {
+      if (Store.generation() !== startGen) return;
+      await bowlDelivery(step, victim, startGen);
+      if (Store.generation() !== startGen) return;
+    }
+
+    Store.setSpotlight(Suspense.litAfterKill(order, victim));
+  }
+
+  // One delivery: the card becomes the bail, the ball is bowled, and the wicket either falls or does not
+  async function bowlDelivery(step, victim, startGen) {
+    Store.setSpotlight(step.number);
+
+    const cell = Render.cellFor(step.number);
+    const slot = el('bail-slot');
+    const stumps = el('stumps');
+
+    const presentMs = Math.round(step.ms * 0.20);
+    const ballMs = Math.round(step.ms * 0.36);
+    const dwellMs = Math.round(step.ms * 0.26);
+    const returnMs = Math.round(step.ms * 0.18);
+
+    const bail = await Animation.presentToBail(cell, slot, presentMs);
+    if (Store.generation() !== startGen) return;
+
+    const aim = Animation.centreOf(stumps);
+    const outcome = step.kill ? null : Dismissals.pickSurvival();
+
+    if (step.kill) {
+      const landed = await Animation.bowlAt(aim, ballMs);
+      if (Store.generation() !== startGen) return;
+      Sound.wicket();
+      Animation.hitStumps();
+      await Promise.all([
+        Animation.bailBowled(bail, cell, 1100),
+        Animation.ballAway('defended', landed || { dx: 0, dy: 0 }, 900)
+      ]);
+      if (Store.generation() !== startGen) return;
+      Store.eliminate(victim);
+      announceWicket(10000);
+      return;
+    }
+
+    // A wide misses the stumps on purpose; anything else is aimed at them and met by the bat
+    const wide = outcome.kind === 'wide';
+    const target = wide
+      ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumps.getBoundingClientRect().width * 2.2, y: aim.y }
+      : aim;
+
+    if (!wide) Animation.swingBat(ballMs + dwellMs);
+    const landed = await Animation.bowlAt(target, ballMs);
+    if (Store.generation() !== startGen) return;
+
+    Animation.showOutcome(outcome.text, dwellMs + returnMs + 300);
+    await Promise.all([
+      Animation.ballAway(outcome.kind, landed || { dx: 0, dy: 0 }, dwellMs),
+      delay(dwellMs)
+    ]);
+    if (Store.generation() !== startGen) return;
+
+    await Animation.returnFromBail(bail, cell, returnMs);
+  }
+
+  function announceWicket(durationMs) {
+    const log = Store.get().eliminated;
+    const entry = log[log.length - 1];
+    if (entry) Animation.showWicketPopup(entry.number, entry.dismissal, durationMs);
+  }
+
   async function bowlRound() {
     if (bowling) return;
     const state = Store.get();
@@ -37,24 +138,10 @@
     Store.beginRound(targets);
 
     try {
-      for (let i = 0; i < targets.length; i++) {
-        if (Store.generation() !== startGen) break;
-        const number = targets[i];
-        const cell = Render.cellFor(number);
-
-        await Animation.throwBall(cell, Store.get().settings.ballMs);
-        if (Store.generation() !== startGen) break;
-
-        Animation.strike(cell);
-        Sound.wicket();
-        Store.eliminate(number);
-
-        const entry = Store.get().eliminated[Store.get().eliminated.length - 1];
-        if (entry) {
-          Animation.showWicketPopup(entry.number, entry.dismissal, entry.stage === 'final' ? 10000 : 2000);
-        }
-
-        if (i < targets.length - 1) await delay(Store.get().settings.interBallMs);
+      if (state.phase === 'final') {
+        await bowlSuspense(targets[0], startGen);
+      } else {
+        await bowlBulk(targets, startGen);
       }
     } finally {
       if (Store.generation() === startGen) Store.endRound();
@@ -174,9 +261,16 @@
     el('reset-btn').disabled = disabled;
   }
 
+  // Drawn once per final stage, whichever route got us there: a round, the auction, or a resume
+  function ensureFinalOrder(state) {
+    if (state.phase !== 'final' || state.finalOrder.length) return;
+    Store.setFinalOrder(Suspense.drawOrder(Store.remainingTickets().map(t => t.number)));
+  }
+
   function boot() {
     Render.mount();
     wireControls();
+    Store.subscribe(ensureFinalOrder);
     Store.subscribe(Render.apply);
     Store.subscribe(persist);
 

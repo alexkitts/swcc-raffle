@@ -91,6 +91,14 @@ const Render = (function () {
     });
   }
 
+  // Driven from state so the lit card survives a re-render mid-sequence
+  function paintSpotlight(state) {
+    const live = state.phase === 'final' ? state.spotlight : null;
+    cells.forEach((cell, number) => {
+      cell.classList.toggle('ticket--live', number === live);
+    });
+  }
+
   function paintScoreboard(state) {
     el('wicket-count').textContent = String(Store.wicketsThisStage());
     el('total-count').textContent = String(Store.stageTotal());
@@ -143,6 +151,7 @@ const Render = (function () {
     else if (state.phase === 'auction') throwBtn.textContent = 'Auction in progress';
     else throwBtn.textContent = 'Bowl Ball (Next: ' + Store.nextDrop() + ' out)';
 
+    el('crease').hidden = state.phase !== 'final';
     el('upload-message').hidden = state.phase !== 'awaiting-csv';
     el('reset-btn').hidden = state.phase === 'awaiting-csv';
   }
@@ -151,6 +160,7 @@ const Render = (function () {
     const rebuilt = builtFor !== signatureOf(state);
     if (rebuilt) buildBoard(state);
     paintOut(state);
+    paintSpotlight(state);
     paintScoreboard(state);
     paintControls(state);
     if (rebuilt) fitBoard();
