@@ -81,13 +81,16 @@ test('the first step never repeats the ticket already lit', () => {
 });
 
 // Full coverage plus a readable ball means the length varies with where the victim sits in the cycle
-test('every round runs between thirty-three and fifty-three seconds', () => {
+// With a uniform tempo the length is just the delivery count, so the band follows from the constants
+test('every round runs between twenty-nine and forty-eight seconds', () => {
+  const floor = Suspense.MIN_DELIVERIES * Suspense.BASE_STEP_MS;
+  const ceiling = Suspense.MAX_DELIVERIES * Suspense.BASE_STEP_MS;
   for (let n = 2; n <= 10; n++) {
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
       const total = steps.reduce((sum, s) => sum + s.ms, 0);
-      assert.ok(total >= 33000 && total <= 53000,
+      assert.ok(total >= floor && total <= ceiling,
         n + ' remaining, victim ' + victim + ': ' + (total / 1000).toFixed(1) + 's');
     }
   }
@@ -111,20 +114,19 @@ test('the base tempo never drops below the readable floor', () => {
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
-      assert.ok(steps[0].baseMs >= 1900,
-        n + ' remaining stepped at ' + steps[0].baseMs + 'ms');
+      assert.ok(steps[0].ms >= 1900,
+        n + ' remaining stepped at ' + steps[0].ms + 'ms');
     }
   }
 });
 
-test('the last deliveries slow down towards the kill', () => {
+// A slower run-in was a tell: the operator could hear the wicket coming two deliveries out
+test('the tempo is uniform, so the run-in never announces the kill', () => {
   const order = tickets(10);
   const steps = Suspense.planSteps(order, 1, 8);
-  const ms = steps.map(s => s.ms);
-  assert.ok(ms.length >= 4);
-  assert.ok(ms[ms.length - 1] > ms[ms.length - 2], 'the kill should linger longest');
-  assert.ok(ms[ms.length - 2] > ms[ms.length - 3], 'the run-in should decelerate');
-  assert.strictEqual(ms[0], ms[1], 'early deliveries should be evenly paced');
+  assert.ok(steps.length >= 4);
+  const paces = new Set(steps.map(s => s.ms));
+  assert.strictEqual(paces.size, 1, 'the tempo varied: ' + [...paces].join(','));
 });
 
 test('a victim outside the order yields no plan rather than throwing', () => {
@@ -172,11 +174,10 @@ test('litAfterKill copes with a victim that is not in the order', () => {
 
 test('the ball flight is the same on every delivery, including the wicket', () => {
   const steps = Suspense.planSteps(tickets(10), 1, 8);
-  const bases = new Set(steps.map(s => s.baseMs));
-  assert.strictEqual(bases.size, 1, 'baseMs varied: ' + [...bases].join(','));
-  assert.ok(steps[steps.length - 1].ms > steps[0].ms, 'the kill should still linger longer');
-  assert.strictEqual(steps[steps.length - 1].baseMs, steps[0].baseMs,
-    'the wicket delivery must not fly slower than the rest');
+  const durations = new Set(steps.map(s => s.ms));
+  assert.strictEqual(durations.size, 1, 'the step duration varied: ' + [...durations].join(','));
+  assert.strictEqual(steps[steps.length - 1].ms, steps[0].ms,
+    'the wicket delivery must not be paced differently from the rest');
 });
 
 test('the base step is never so short that a readable ball will not fit', () => {
@@ -184,7 +185,7 @@ test('the base step is never so short that a readable ball will not fit', () => 
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
-      assert.ok(steps[0].baseMs >= 1900, n + ' remaining gave a base step of ' + steps[0].baseMs + 'ms');
+      assert.ok(steps[0].ms >= 1900, n + ' remaining gave a base step of ' + steps[0].ms + 'ms');
     }
   }
 });

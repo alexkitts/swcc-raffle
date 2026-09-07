@@ -7,10 +7,6 @@ const Suspense = (function () {
   const MIN_DELIVERIES = 15;
   const MAX_DELIVERIES = 25;
 
-  // Multipliers for the last deliveries, so the spotlight slows into the kill
-  const DECEL = Object.freeze([1.35, 1.8, 2.4]);
-
-
   function drawOrder(numbers, rng) {
     const random = rng || Math.random;
     const out = numbers.slice();
@@ -51,14 +47,12 @@ const Suspense = (function () {
       ? candidates[Math.floor(random() * candidates.length)]
       : offset + n;
 
+    // Every step is timed identically: a slower run-in would announce the wicket before it lands
     const steps = [];
     for (let i = 0; i < total; i++) {
-      const fromEnd = total - 1 - i;
-      const factor = fromEnd < DECEL.length ? DECEL[DECEL.length - 1 - fromEnd] : 1;
       steps.push({
         number: order[(litIndex + 1 + i) % n],
-        ms: Math.round(stepMs * factor),
-        baseMs: Math.round(stepMs),
+        ms: Math.round(stepMs),
         kill: i === total - 1
       });
     }

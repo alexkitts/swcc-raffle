@@ -75,10 +75,10 @@
     const slot = el('bail-slot');
     const stumps = el('stumps');
 
-    // Timed off baseMs, never the decelerated ms, so the wicket ball does not fly slower and give itself away
-    const presentMs = Math.round(step.baseMs * 0.12);
-    const ballMs = Math.round(step.baseMs * 0.34);
-    const returnMs = Math.round(step.baseMs * 0.10);
+    // Uniform for every delivery, so neither the flight nor the pause hints at which ball is the wicket
+    const presentMs = Math.round(step.ms * 0.12);
+    const ballMs = Math.round(step.ms * 0.34);
+    const returnMs = Math.round(step.ms * 0.10);
     const dwellMs = Math.max(400, step.ms - presentMs - ballMs - returnMs);
 
     const bail = await Animation.presentToBail(cell, slot, presentMs);
