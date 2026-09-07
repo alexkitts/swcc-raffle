@@ -95,6 +95,7 @@ src/
   persistence.js    localStorage save/load/clear, availability detection, JSON export/import
   render.js         state to DOM (the only DOM writer besides animation)
   animation.js      ball flight, wicket popup, winner banner
+  auction.js        the final-10 auction modal
   audio.js          sound preload and safe playback
   main.js           bootstrap and event wiring only
 tests/
@@ -106,7 +107,7 @@ tests/
 ```
 
 Load order in `index.html`: `rules`, `csv`, `dismissals`, `state`, `persistence`,
-`audio`, `animation`, `render`, `main`.
+`audio`, `animation`, `render`, `auction`, `main`.
 
 ## 6. State
 
@@ -115,7 +116,7 @@ One object is the single source of truth. The DOM holds no game state.
 ```js
 {
   schemaVersion: 1,
-  tickets: [ { number: Number, name: String, isAuctionTicket: Boolean } ],
+  tickets: [ { number: Number, name: String } ],
   eliminated: [ { number, name, dismissal, at, stage: 'bulk' | 'final' } ],
   phase: 'awaiting-csv' | 'bulk' | 'auction' | 'final' | 'won',
   settings: { dropSize: 10, finalStageAt: 10, ballMs: 800, interBallMs: 200 },
@@ -131,8 +132,10 @@ authoritative record of who is out, and it yields the scoreboard, the counts,
 recovery and (if ever wanted) undo, and it serialises to a single key.
 
 **Derived, never stored** — these are computed from `tickets` and `eliminated` on
-demand: `remaining`, `remainingTickets`, `wickets`, `nextDrop`, `winner`. Storing
-them is what allowed `updateButtonText` and `throwBall` to disagree (D9).
+demand: `remaining`, `remainingTickets`, `wickets`, `nextDrop`, `winner`, and
+whether a ticket is the auction ticket (`Rules.isAuctionTicket`, which is just
+`number === 1`). Storing them is what allowed `updateButtonText` and `throwBall`
+to disagree (D9).
 
 `usedFinalDismissals` is persisted so a resumed draw does not repeat a
 final-stage dismissal message.
