@@ -16,7 +16,9 @@ const Sound = (function () {
       audio.currentTime = 0;
       const p = audio.play();
       if (p && typeof p.catch === 'function') p.catch(() => {});
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      // Autoplay or decoding can fail; a silent draw beats a crash.
+    }
   }
 
   return {
