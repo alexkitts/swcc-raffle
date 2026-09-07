@@ -18,7 +18,7 @@ const Csv = (function () {
         inQuotes = false;
         continue;
       }
-      if (ch === '"' && field === '') { inQuotes = true; continue; }
+      if (ch === '"' && field.trim() === '') { inQuotes = true; continue; }
       if (ch === ',') { row.push(field); field = ''; continue; }
       if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; continue; }
       field += ch;

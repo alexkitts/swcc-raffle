@@ -43,6 +43,13 @@ test('handles a mid-field unescaped quote as a literal character, not a quote to
   assert.deepStrictEqual(r.tickets.map(t => t.number), [1, 7, 6]);
 });
 
+test('handles leading whitespace before an opening quote', () => {
+  const r = Csv.parse(' "Hudson, Richard",58\nB,6\n');
+  assert.strictEqual(r.tickets.length, 2);
+  assert.strictEqual(r.tickets[0].name, 'Hudson, Richard');
+  assert.strictEqual(r.tickets[1].name, 'B');
+});
+
 test('keeps a first row whose name contains "name" when its number cell is numeric', () => {
   const r = Csv.parse('Nameless Joe,5\nB,6\n');
   assert.strictEqual(r.tickets.length, 2);
