@@ -136,19 +136,25 @@ const Animation = (function () {
     if (!el) return Promise.resolve();
 
     const side = Math.random() < 0.5 ? -1 : 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    // A boundary has to leave the screen, or the shot does not read from the back of the room
     const paths = {
-      wide: { x: from.dx + side * window.innerWidth * 0.34, y: from.dy + 120, scale: 0.28 },
-      defended: { x: from.dx + side * 70, y: from.dy + 150, scale: 0.5 },
-      single: { x: from.dx + side * 220, y: from.dy + 90, scale: 0.36 },
-      four: { x: from.dx + side * window.innerWidth * 0.6, y: from.dy + 40, scale: 0.2 },
-      six: { x: from.dx + side * window.innerWidth * 0.3, y: from.dy - window.innerHeight * 0.75, scale: 0.12 }
+      wide: { x: from.dx + side * w * 0.22, y: from.dy + 180, scale: 0.3, fade: 1 },
+      defended: { x: from.dx + side * 90, y: from.dy + 170, scale: 0.55, fade: 1 },
+      single: { x: from.dx + side * 300, y: from.dy + 120, scale: 0.4, fade: 1 },
+      four: { x: from.dx + side * w * 1.15, y: from.dy - 60, scale: 0.16, fade: 0 },
+      six: { x: from.dx + side * w * 0.5, y: from.dy - h * 1.25, scale: 0.08, fade: 0 },
+      deflected: { x: from.dx + side * w * 0.45, y: from.dy - h * 0.35, scale: 0.18, fade: 0 }
     };
     const target = paths[kind] || paths.defended;
 
     const animation = el.animate([
       { transform: 'translateX(-50%) translate(' + from.dx + 'px, ' + from.dy + 'px) scale(0.4)', opacity: 1, offset: 0 },
+      { transform: 'translateX(-50%) translate(' + target.x + 'px, ' + target.y + 'px) scale(' + target.scale + ')', opacity: target.fade, offset: 0.82 },
       { transform: 'translateX(-50%) translate(' + target.x + 'px, ' + target.y + 'px) scale(' + target.scale + ')', opacity: 0, offset: 1 }
-    ], { duration: ms, easing: 'cubic-bezier(.2,.6,.4,1)' });
+    ], { duration: ms, easing: 'cubic-bezier(.12,.7,.35,1)' });
 
     return animation.finished.catch(() => {}).then(() => { resetBall(); });
   }

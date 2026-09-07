@@ -73,25 +73,38 @@
     const stumps = el('stumps');
 
     // Timed off baseMs, never the decelerated ms, so the wicket ball does not fly slower and give itself away
-    const presentMs = Math.round(step.baseMs * 0.16);
-    const ballMs = Math.round(step.baseMs * 0.50);
-    const returnMs = Math.round(step.baseMs * 0.14);
-    const dwellMs = Math.max(140, step.ms - presentMs - ballMs - returnMs);
+    const presentMs = Math.round(step.baseMs * 0.12);
+    const ballMs = Math.round(step.baseMs * 0.34);
+    const returnMs = Math.round(step.baseMs * 0.10);
+    const dwellMs = Math.max(400, step.ms - presentMs - ballMs - returnMs);
 
     const bail = await Animation.presentToBail(cell, slot, presentMs);
     if (Store.generation() !== startGen) return;
 
     const aim = Animation.centreOf(stumps);
     const outcome = step.kill ? null : Dismissals.pickSurvival();
+    const wide = !step.kill && outcome.kind === 'wide';
+
+    // The bat swings on every delivery, wicket included, or its absence would announce the out
+    Animation.swingBat(aim, Math.round(ballMs * 1.05));
+
+    // A wide passes just outside the stumps rather than halfway across the screen
+    const stumpsWidth = stumps.getBoundingClientRect().width;
+    const target = wide
+      ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumpsWidth * 0.85, y: aim.y }
+      : aim;
+
+    const landed = (await Animation.bowlAt(target, ballMs)) || { dx: 0, dy: 0 };
+    if (Store.generation() !== startGen) return;
+
+    // Contact makes a noise, whether it hits the stumps or the bat; a wide hits nothing
+    if (!wide) Sound.wicket();
 
     if (step.kill) {
-      const landed = await Animation.bowlAt(aim, ballMs);
-      if (Store.generation() !== startGen) return;
-      Sound.wicket();
       Animation.hitStumps();
       await Promise.all([
         Animation.bailBowled(bail, cell, 1100),
-        Animation.ballAway('defended', landed || { dx: 0, dy: 0 }, 900)
+        Animation.ballAway('deflected', landed, 950)
       ]);
       if (Store.generation() !== startGen) return;
       Store.eliminate(victim);
@@ -99,19 +112,10 @@
       return;
     }
 
-    // A wide misses the stumps on purpose; anything else is aimed at them and met by the bat
-    const wide = outcome.kind === 'wide';
-    const target = wide
-      ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumps.getBoundingClientRect().width * 2.2, y: aim.y }
-      : aim;
-
-    if (!wide) Animation.swingBat(aim, ballMs * 0.9);
-    const landed = await Animation.bowlAt(target, ballMs);
-    if (Store.generation() !== startGen) return;
-
     Animation.showOutcome(outcome.text, dwellMs + returnMs + 300);
+    const awayMs = Math.min(dwellMs, 950);
     await Promise.all([
-      Animation.ballAway(outcome.kind, landed || { dx: 0, dy: 0 }, dwellMs),
+      Animation.ballAway(outcome.kind, landed, awayMs),
       delay(dwellMs)
     ]);
     if (Store.generation() !== startGen) return;

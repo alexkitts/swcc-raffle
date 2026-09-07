@@ -1,9 +1,9 @@
 'use strict';
 
 const Suspense = (function () {
-  const PREFERRED_STEP_MS = 1800;
-  const TARGET_MS = 20000;
-  const MIN_STEP_MS = 1300;
+  const PREFERRED_STEP_MS = 2100;
+  const TARGET_MS = 26000;
+  const MIN_STEP_MS = 1900;
   const MAX_STEP_MS = 3200;
 
   // Multipliers for the last deliveries, so the spotlight slows into the kill

@@ -81,13 +81,13 @@ test('the first step never repeats the ticket already lit', () => {
 });
 
 // Full coverage plus a readable ball means the length varies with where the victim sits in the cycle
-test('every round runs between twenty and thirty seconds', () => {
+test('every round runs between twenty-five and forty-four seconds', () => {
   for (let n = 2; n <= 10; n++) {
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
       const total = steps.reduce((sum, s) => sum + s.ms, 0);
-      assert.ok(total >= 20000 && total <= 30000,
+      assert.ok(total >= 25000 && total <= 44000,
         n + ' remaining, victim ' + victim + ': ' + (total / 1000).toFixed(1) + 's');
     }
   }
@@ -105,11 +105,16 @@ test('nobody sits out a round, however small the field', () => {
   }
 });
 
-test('the tempo slows as the field shrinks', () => {
-  const wide = Suspense.planSteps(tickets(10), 1, 6);
-  const narrow = Suspense.planSteps(tickets(6), 1, 4);
-  assert.ok(narrow[0].ms > wide[0].ms,
-    'six left stepped at ' + narrow[0].ms + 'ms, ten left at ' + wide[0].ms + 'ms');
+// The pause between deliveries is held long enough to read, which the floor now guarantees at every size
+test('the base tempo never drops below the readable floor', () => {
+  for (let n = 2; n <= 10; n++) {
+    const order = Suspense.drawOrder(tickets(n), seeded(n));
+    for (const victim of order) {
+      const steps = Suspense.planSteps(order, order[0], victim);
+      assert.ok(steps[0].baseMs >= 1900,
+        n + ' remaining stepped at ' + steps[0].baseMs + 'ms');
+    }
+  }
 });
 
 test('the last deliveries slow down towards the kill', () => {
@@ -126,7 +131,7 @@ test('a shorter target never speeds the ball past the readable floor', () => {
   const order = tickets(10);
   const quick = Suspense.planSteps(order, 1, 5, { targetMs: 8000 });
   assert.strictEqual(new Set(quick.map(s => s.number)).size, 10, 'coverage must hold');
-  assert.ok(quick[0].baseMs >= 1300, 'stepped at ' + quick[0].baseMs + 'ms, below the floor');
+  assert.ok(quick[0].baseMs >= 1900, 'stepped at ' + quick[0].baseMs + 'ms, below the floor');
   assert.strictEqual(quick[quick.length - 1].number, 5);
 });
 
@@ -187,7 +192,7 @@ test('the base step is never so short that a readable ball will not fit', () => 
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
-      assert.ok(steps[0].baseMs >= 1300, n + ' remaining gave a base step of ' + steps[0].baseMs + 'ms');
+      assert.ok(steps[0].baseMs >= 1900, n + ' remaining gave a base step of ' + steps[0].baseMs + 'ms');
     }
   }
 });

@@ -163,10 +163,10 @@
 }
 
 @keyframes batSwing {
-  0%   { opacity: 0; transform: translate(-50%, -8%) rotate(72deg); }
-  22%  { opacity: 1; transform: translate(-50%, -8%) rotate(46deg); }
-  58%  { opacity: 1; transform: translate(-50%, -8%) rotate(-22deg); }
-  100% { opacity: 0; transform: translate(-50%, -8%) rotate(-48deg); }
+  0%   { opacity: 0; transform: translate(-50%, -8%) rotate(74deg); }
+  12%  { opacity: 1; transform: translate(-50%, -8%) rotate(58deg); }
+  88%  { opacity: 1; transform: translate(-50%, -8%) rotate(-42deg); }
+  100% { opacity: 0; transform: translate(-50%, -8%) rotate(-55deg); }
 }
 
 /* Lighter than a wicket popup, because the batsman survived */
