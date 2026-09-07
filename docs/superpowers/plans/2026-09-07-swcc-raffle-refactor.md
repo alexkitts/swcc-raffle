@@ -712,7 +712,8 @@ const Csv = (function () {
         inQuotes = false;
         continue;
       }
-      if (ch === '"') { inQuotes = true; continue; }
+      // A quote opens a quoted field only at field start, so a stray mid-field quote stays literal
+      if (ch === '"' && field.trim() === '') { inQuotes = true; continue; }
       if (ch === ',') { row.push(field); field = ''; continue; }
       if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; continue; }
       field += ch;
@@ -731,7 +732,8 @@ const Csv = (function () {
       .map(cells => cells.map(cell => cell.trim()))
       .filter(cells => cells.some(cell => cell !== ''));
 
-    if (rows.length && /name/i.test(rows[0][0] || '')) rows = rows.slice(1);
+    // A data row always has a positive integer in the number cell; a header does not
+    if (rows.length && !/^\d+$/.test(rows[0][1] || '')) rows = rows.slice(1);
 
     const tickets = [];
     const warnings = [];
@@ -1752,6 +1754,9 @@ Replace `index.html` entirely:
 }
 
 * { box-sizing: border-box; }
+
+/* A bare [hidden] loses to author display rules like .banner--resume below */
+[hidden] { display: none !important; }
 
 body {
   font-family: var(--mono);
@@ -2901,7 +2906,10 @@ both on keydown rather than the deprecated onkeypress (D11)."
     });
 
     el('export-btn').addEventListener('click', () => {
-      const blob = new Blob([Persistence.toJson(Store.get())], { type: 'application/json' });
+      const json = Persistence.toJson(Store.get());
+      // toJson returns null if the state cannot be serialised
+      if (json === null) { Render.showError('Could not export the draw.'); return; }
+      const blob = new Blob([json], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'swcc-raffle-progress.json';
@@ -3074,7 +3082,7 @@ No install required; Node ships the test runner.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A
+git add README.md app.js style.css
 git commit -m "Remove the original app.js and style.css; add README
 
 The rewrite is complete and verified: 89 unit tests plus a full browser

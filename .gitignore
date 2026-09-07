@@ -1,0 +1,7 @@
+# Agent and tooling scratch, never part of the app
+.superpowers/
+.playwright-mcp/
+
+# Local verification artifacts
+_httpserver.log
+_verify_*.png

@@ -264,7 +264,9 @@ Must handle, in order:
 2. Normalise `\r\n` and `\r` to `\n`.
 3. Parse per RFC 4180: quoted fields, commas inside quotes (`"Smith, John"`), and
    escaped quotes (`""`).
-4. Skip a header row when the first cell matches `/name/i`.
+4. Skip a header row, detected by its number cell not holding a positive integer.
+   Sniffing the name cell for `/name/i` instead would wrongly drop a real player
+   called "Nameless Joe"; a data row always has a number.
 5. Skip blank and whitespace-only rows.
 6. Trim surrounding whitespace from both fields.
 
