@@ -67,7 +67,13 @@ const Persistence = (function () {
     return saved.phase !== 'awaiting-csv' && saved.phase !== 'won';
   }
 
-  function toJson(state) { return JSON.stringify(state, null, 2); }
+  function toJson(state) {
+    try {
+      return JSON.stringify(state, null, 2);
+    } catch (e) {
+      return null;
+    }
+  }
 
   function fromJson(text) {
     try {

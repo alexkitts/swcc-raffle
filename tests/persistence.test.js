@@ -111,3 +111,9 @@ test('fromJson returns null for junk instead of throwing', () => {
   assert.strictEqual(Persistence.fromJson(''), null);
   assert.strictEqual(Persistence.fromJson('[1,2,3]'), null);
 });
+
+test('toJson returns null rather than throwing on an unserialisable state', () => {
+  const circular = { schemaVersion: 1 };
+  circular.self = circular;
+  assert.strictEqual(Persistence.toJson(circular), null);
+});
