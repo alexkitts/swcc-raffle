@@ -4,7 +4,8 @@ const Rules = (function () {
   const AUCTION_TICKET_NUMBER = 1;
   const MAX_TICKETS = 250;
   const FINAL_STAGE_AT = 10;
-  const DROP_SIZE_OPTIONS = Object.freeze([5, 10, 20, 25, 50]);
+  // One at a time is allowed, for drawing out the last stretch by hand
+  const DROP_SIZE_OPTIONS = Object.freeze([1, 5, 10, 20, 25, 50]);
   const DEFAULT_SETTINGS = Object.freeze({
     dropSize: 10,
     finalStageAt: FINAL_STAGE_AT,
