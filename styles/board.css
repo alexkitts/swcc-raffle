@@ -49,19 +49,18 @@
   position: relative;
 }
 
+/* A faint watermark filling the cell rather than a corner badge */
 .ticket--auction:not(.ticket--out)::after {
   content: "\1F6E1";
   position: absolute;
-  top: -6px;
-  right: -6px;
-  font-size: .7rem;
-  background: gold;
-  border-radius: 50%;
-  width: 1.1rem;
-  height: 1.1rem;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: min(calc(var(--cell-h, 2.6rem) * 0.78), calc(var(--cell-w, 2.5rem) * 0.78));
+  line-height: 1;
+  opacity: .18;
+  pointer-events: none;
 }
 
 /* Final stage: fewer, bigger cells showing names. */
