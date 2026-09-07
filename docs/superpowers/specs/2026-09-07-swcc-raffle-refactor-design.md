@@ -21,7 +21,7 @@ draw) and a code review of the existing implementation.
 
 ## 2. Goals
 
-1. Correct for **any** ticket count from 1 to 200.
+1. Correct for **any** ticket count from 1 to 250.
 2. A draw survives the laptop being closed, crashing, or the page being reloaded.
 3. Game rules live in pure, tested functions rather than in DOM state.
 4. The CSV upload tolerates whatever Excel produces, and reports what it did.
@@ -36,11 +36,12 @@ draw) and a code review of the existing implementation.
 | ID | Requirement | Source |
 |----|-------------|--------|
 | R1 | No risk of losing the draw if the laptop is closed | Operator |
-| R2 | Support any count of tickets up to 200, numbers displayed on the board | Operator |
+| R2 | Support any count of tickets up to 250, numbers displayed on the board | Operator |
 | R3 | First click reduces remaining to the nearest lower multiple of the drop size (e.g. 127 to 120); subsequent rounds drop by the drop size until the final 10 | Operator |
 | R4 | At the final 10, offer the opportunity to auction one of those 10 numbers | Operator |
 | R5 | Drop size is operator-configurable between rounds; the final 10 is always one at a time | Committed to operator |
-| R6 | CSV can be exported from Excel and uploaded moments before the draw starts | Operator |
+| R6 | CSV uploaded moments before the draw starts, based on last year's template format | Operator |
+| R7 | Ticket **#1 is reserved for the auction**, exactly as last year: protected from elimination through the bulk stage, then auctioned live at the final 10 | Operator |
 
 ### 3.2 Defects to fix
 
@@ -53,10 +54,10 @@ draw) and a code review of the existing implementation.
 | D5 | `loadPlayersFromCSV()` fetches `./players.csv`, which does not exist — guaranteed 404 on every load, and fails outright on `file://`. Dead path. | `app.js:69-94` |
 | D6 | CSV parsed with `line.split(',')`. Breaks on Excel's UTF-8 BOM, CRLF line endings and quoted fields containing commas. Malformed rows are silently dropped by the truthiness filter. | `app.js:412-425` |
 | D7 | Names interpolated via `innerHTML` in five places; `&` or `<` in a name renders incorrectly. | `app.js:199,243,505,541` |
-| D8 | Protected ticket hardcoded as the string `"1"` in four places. | `app.js:53,262,317,577` |
+| D8 | Protected ticket hardcoded as the bare string `"1"` in four places, with the rule itself never stated. The *rule* is correct (R7) — the defect is that it is duplicated and undocumented rather than expressed once. | `app.js:53,262,317,577` |
 | D9 | Rules logic duplicated and able to disagree between `updateButtonText` and `throwBall`. | `app.js:49-58` vs `259-267` |
 | D10 | No responsive handling: `overflow:hidden`, fixed `100vh`, `flex: 0 0 70%`, hardcoded 35 tickets per row and `25px x 60px` cells, `.csv-controls { right: 35% }` tuned to that split. `.logo` is `position:absolute` with `left` but no `top`, so it floats into the heading. | `style.css:1-42,333` |
-| D11 | `alert()` for success and errors; mixed `onclick` / `addEventListener` / deprecated `onkeypress`; table used for layout with no ARIA, no live region, no focus trap or Escape on the auction modal. | throughout |
+| D11 | `alert()` for success and errors; mixed `onclick` / `addEventListener` / deprecated `onkeypress`; no Escape on the auction modal. (The ARIA and live-region half of this finding is out of scope — see section 13.) | throughout |
 | D12 | Inline styles injected as HTML strings, duplicating CSS. | `app.js:438,512` |
 
 ### 3.3 Non-goals
@@ -100,7 +101,8 @@ tests/
   rules.test.js
   csv.test.js
   state.test.js
-  fixtures/excel-export.csv
+  fixtures/last-year.csv            copy of template.csv, 187 rows, pinned
+  fixtures/spreadsheet-quirks.csv   same data with BOM, CRLF, quoted comma, header
 ```
 
 Load order in `index.html`: `rules`, `csv`, `dismissals`, `state`, `persistence`,
@@ -162,9 +164,18 @@ Worked examples:
  15, drop 10 ->  10,                                 then singles
 ```
 
-**Proof obligation:** for every `remaining` in 1-200 and every `dropSize` in
+**Proof obligation:** for every `remaining` in 1-250 and every `dropSize` in
 {5, 10, 20, 25, 50}, repeated application must reach exactly `finalStageAt` and
-never below it, in a finite number of rounds.
+never below it, in a finite number of rounds. Verified during design across all
+1250 combinations.
+
+A corollary worth recording: the drop never exceeds the number of *eligible*
+targets during the bulk stage, because `drop <= remaining - finalStageAt <
+remaining - 1`, and protecting ticket #1 removes exactly one candidate. So R7's
+protection can never force `pickTargets` to clamp and desync the schedule.
+
+At 250 tickets a drop size of 10 means 24 bulk rounds plus 9 singles — 33 clicks.
+This is precisely why R5 exists; the operator will likely want 20 or 25.
 
 ### 7.2 Target selection
 
@@ -216,10 +227,23 @@ disagree.
 
 ### 7.4 Auction ticket
 
-Identified by **name**, matching `/^\s*auction\s*$/i`, not by number (D8). If no
-such row exists, no ticket is protected and the auction stage is skipped — and
-this is stated in the load summary (section 8) so the operator is not surprised on
-the night. If more than one matches, the first is used and a warning is recorded.
+**Ticket number 1 is the auction ticket** (R7), as last year. This is the actual
+domain rule, so identifying it by number is correct rather than fragile — the
+defect in D8 was that the rule was duplicated as a bare `"1"` in four places and
+written down nowhere. It is therefore expressed exactly once:
+
+```js
+const AUCTION_TICKET_NUMBER = 1;
+function isAuctionTicket(ticket) { return ticket.number === AUCTION_TICKET_NUMBER; }
+```
+
+The row's *name* in the CSV (`Auction` in last year's template) is only a label
+and carries no logic; ticket #1 is the auction ticket whatever it is called.
+
+If the CSV contains no ticket #1, no ticket is protected and the auction stage is
+skipped. That is stated plainly in the load summary (section 8) rather than
+happening silently, so the operator finds out at upload time rather than at the
+final 10.
 
 On confirm, the operator-entered name replaces the auction ticket's `name`. On
 skip, the name is left unchanged. Either way `auctionResolved` becomes true and
@@ -244,16 +268,21 @@ Validation:
 - `number` must parse as a positive integer. Invalid rows are skipped and counted.
 - `name` must be non-empty. Invalid rows are skipped and counted.
 - Duplicate ticket numbers are kept but recorded as a warning.
-- More than 200 valid rows is an error; nothing is loaded.
+- More than 250 valid rows is an error; nothing is loaded.
 - Zero valid rows is an error; nothing is loaded.
 
 Duplicate *names* are expected and legitimate — one person buys several tickets.
+Last year's template has Matt Coles down for fourteen.
 
 `alert()` is replaced by an on-screen **load summary** (D11), because silent
 mangling is the failure mode that matters when uploading in front of a room:
 
-> Loaded 127 tickets. Auction ticket #1 detected.
+> Loaded 127 tickets. Ticket #1 reserved for auction.
 > 2 blank rows skipped. Warning: ticket #43 appears twice.
+
+If ticket #1 is absent the summary says so explicitly:
+
+> Loaded 127 tickets. **No ticket #1 — the auction stage will be skipped.**
 
 Loading a CSV resets the draw: `eliminated`, `round`, `usedFinalDismissals` and
 `auctionResolved` are cleared, and any saved progress is discarded.
@@ -264,7 +293,7 @@ The dead `players.csv` fetch is deleted (D5).
 
 Key: `swcc-raffle:v1`. The whole state object is serialised.
 
-Written after every elimination and every phase change. At 200 tickets the payload
+Written after every elimination and every phase change. At 250 tickets the payload
 is roughly 10-20KB, well inside quota.
 
 **Availability detection is mandatory.** `localStorage` is not guaranteed on
@@ -375,40 +404,61 @@ regardless of what is displayed.
 
 - Ticket board becomes CSS Grid with
   `grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr))`, so any count
-  from 1 to 200 reflows to the available width. The hardcoded 35-per-row and
+  from 1 to 250 reflows to the available width. The hardcoded 35-per-row and
   `25px x 60px` cells are removed. The `2.5rem` floor is a starting value, to be
   confirmed against the screenshot checks below.
 - Cell and font sizes scale with the board using `clamp()`, so the same board is
-  legible at 200 tickets and at 8.
+  legible at 250 tickets and at 8.
 - `dvh` replaces `vh`; `overflow: hidden` is removed from `body`.
 - The 70/30 main/scoreboard split becomes a grid with a minimum scoreboard width,
   and the scoreboard moves below the board under a narrow-width breakpoint.
 - `.csv-controls { right: 35% }` is replaced by placement within the layout
   (D10). `.logo` gets an explicit `top`.
-- Verified by screenshot at 1366x768, 1920x1080 and 1280x720.
 
-## 13. Accessibility
+**The display target is a projector**, not a phone, so the responsive work is
+about fitting 250 tickets legibly onto a fixed large screen rather than about
+mobile breakpoints. Verified by screenshot at 1920x1080 and 1280x720 (typical
+projector modes) and 1366x768 (the operator's laptop, for setting up), at both
+187 and 250 tickets. Legibility from the back of a room is the acceptance
+criterion: at 250 tickets the numbers must still read at a glance.
 
-- Scoreboard is an `aria-live="polite"` region so eliminations are announced.
-- Auction modal gets `role="dialog"`, `aria-modal="true"`, a focus trap, Escape to
-  close, and focus restored to the trigger on close.
-- Deprecated `onkeypress` replaced by `keydown`.
-- `prefers-reduced-motion: reduce` skips the ball flight and applies the result
-  immediately. This doubles as a deliberate "go faster" path for the operator.
-- Real `<button>` semantics throughout, visible focus rings, and a contrast check
-  on the gold-on-brown palette.
+## 13. Accessibility — out of scope
+
+**Explicitly excluded at the operator's direction.** The app is driven by one
+person on one laptop and projected onto a screen for a room to watch. There is no
+screen reader, no keyboard-only user, and no second audience for the DOM. So: no
+ARIA roles, no `aria-live` regions, no focus management, no contrast auditing.
+
+Two items originally filed under this heading are kept, because they are
+operational rather than assistive:
+
+- **Deprecated `onkeypress` replaced by `keydown`** — a code-quality fix, not an
+  accessibility one.
+- **Escape closes the auction modal, and its input is focused on open** — the
+  operator is typing into that box live, in front of a room, and needs both.
+
+Nothing else from the original accessibility scope survives. Should the app ever
+be used somewhere this matters, this section is the record of what was skipped
+and why.
 
 ## 14. Testing
 
 `node --test tests/` — no install required.
 
 **`rules.test.js`**
-- `nextDrop` reaches exactly `finalStageAt` for every count 1-200 by dropSize
-  {5, 10, 20, 25, 50}, never overshooting (the D1 regression test).
+- `nextDrop` reaches exactly `finalStageAt` for every count 1-250 by dropSize
+  {5, 10, 20, 25, 50}, never overshooting (the D1 regression test). All 1250
+  combinations, since it is a cheap pure function and this is the defect that
+  would ruin the night.
+- The 187-count case from last year's template specifically, as a named test —
+  it is the count that is broken today.
 - R3 specifically: the first drop from a non-multiple lands on the nearest lower
   multiple of the drop size.
-- `pickTargets` never selects the auction ticket during `bulk`, always selects it
-  as eligible from `final`, returns distinct numbers, and clamps to availability.
+- `eligibleTargets` never includes ticket #1 during `bulk`, and always includes it
+  from `final` onward (R7). `pickTargets` returns distinct numbers and clamps to
+  availability.
+- Ticket #1 survives a full simulated bulk stage from 250, 187 and 127 tickets —
+  a property test over many seeded runs, not a single sample.
 - `finalStageAt` always yields a drop of exactly 1.
 - Phase transitions, including the small-draw case (fewer than 10 tickets loaded)
   and the no-auction-ticket case.
@@ -420,8 +470,15 @@ regardless of what is displayed.
 - Blank rows, trailing newlines, whitespace-only rows.
 - Invalid and negative and non-integer numbers; empty names.
 - Duplicate numbers warn; duplicate names do not.
-- Over 200 rows and zero valid rows both error without loading.
-- A real Excel export fixture (`tests/fixtures/excel-export.csv`).
+- Over 250 rows and zero valid rows both error without loading.
+- Ticket #1 present and absent, driving the two load-summary messages.
+- **Last year's `template.csv` (187 rows) parses to exactly 187 tickets** with
+  ticket #1 reserved — the baseline fixture, copied to
+  `tests/fixtures/last-year.csv` so the test is pinned against a known-good file
+  even if `template.csv` is later edited.
+- A `tests/fixtures/spreadsheet-quirks.csv` fixture reproducing what a
+  spreadsheet export does to that same data: BOM, CRLF, a quoted
+  `"Hudson, Richard"`, a header row and a trailing blank line.
 
 **`state.test.js`**
 - `eliminate` updates all derived counts consistently.
@@ -430,14 +487,17 @@ regardless of what is displayed.
 - `schemaVersion` mismatch discards the save.
 - Loading a new CSV clears prior progress.
 
-**Browser verification** (manual, driven via automation):
-- A full 127-ticket draw end to end, through auction to winner.
-- A 187-ticket draw (the committed template) confirming the auction fires — the
-  case that is broken today.
+**Browser verification** (driven via automation):
+- A full 187-ticket draw from last year's template, end to end, through the
+  auction to a winner — confirming the auction fires, which is the case that is
+  broken today.
+- A 250-ticket draw at drop size 25, confirming the new ceiling.
+- Ticket #1 visibly survives to the final 10 and is then auctioned (R7).
 - Reload mid-draw, then resume.
-- `localStorage` availability probe from a `file://` origin in the operator's
-  browser, confirming R1 holds in the real deployment mode.
-- Screenshots at the three viewport sizes in section 12.
+- **`localStorage` availability probe from a `file://` origin**, confirming R1
+  holds in the actual deployment mode rather than only when served. This is the
+  single riskiest assumption in the design.
+- Screenshots at the projection sizes in section 12, at both 187 and 250 tickets.
 
 ## 15. Order of work
 
@@ -447,21 +507,29 @@ regardless of what is displayed.
 4. Sequential round execution — D3, D4 fixed.
 5. `render.js` keyed, phase-driven boards — D7, D12 fixed.
 6. Drop-size control — R5.
-7. Grid and responsive — D10, R2.
-8. Accessibility — D11.
+7. Grid and responsive — D10, R2 (up to 250).
+8. Load summary, Escape on the modal, `keydown` for `onkeypress` — D11.
 9. Browser verification per section 14.
 
 Every confirmed defect is fixed and proven before any cosmetic work begins.
 
-## 16. Assumptions to confirm with the operator
+## 16. Confirmed with the operator
 
-These do not block starting work, but should be settled before the draw:
+All three previously open questions are now settled:
 
-1. **Will the CSV contain a reserved `Auction` row, as last year's template did?**
-   If not, the auction stage is skipped. Detection by name (section 7.4) means the
-   row can be named "Auction" with any ticket number.
-2. **A real Excel export is wanted as a test fixture**, rather than a
-   hand-constructed guess, so section 8 is verified against what the operator's
-   spreadsheet actually produces.
-3. The board displays ticket **numbers** during the bulk stage and **names plus
-   numbers** in the final 10, as it does today.
+1. **Ticket #1 is reserved for the auction, same logic as last year.** Confirmed.
+   Captured as R7 and section 7.4.
+2. **Last year's `template.csv` is the test base**, as CSV — no spreadsheet file
+   is needed. Confirmed. Captured in section 14 as `tests/fixtures/last-year.csv`,
+   with the spreadsheet-quirk handling in section 8 retained anyway: it costs
+   almost nothing and the upload happens minutes before the draw starts.
+3. **The board shows ticket numbers during the bulk stage, and names plus numbers
+   in the final 10**, as it does today. Confirmed.
+
+Ticket ceiling raised from 200 to 250 (R2). Accessibility explicitly descoped
+(section 13).
+
+Nothing remains open. The one assumption still carrying risk is technical rather
+than a question for the operator: whether `localStorage` is writable from a
+`file://` origin in the browser used on the night. Section 9 handles the failure
+case, and section 14 verifies it empirically before the draw.
