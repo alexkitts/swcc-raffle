@@ -49,6 +49,7 @@
   min-height: 0;
 }
 
+/* Three separate elements so each stump can be knocked its own way */
 .stumps {
   position: absolute;
   left: 50%;
@@ -56,10 +57,19 @@
   height: 82%;
   aspect-ratio: 3 / 4;
   transform: translateX(-50%);
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 40'%3E%3Cg fill='%23efe2bd' stroke='%238a6a3a' stroke-width='.6'%3E%3Crect x='4' y='4' width='4.2' height='36' rx='2.1'/%3E%3Crect x='12.9' y='4' width='4.2' height='36' rx='2.1'/%3E%3Crect x='21.8' y='4' width='4.2' height='36' rx='2.1'/%3E%3C/g%3E%3C/svg%3E")
-    center bottom / contain no-repeat;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5));
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 4%;
+}
+
+.stump {
+  width: 15%;
+  height: 90%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d9c69a 0%, #efe2bd 38%, #fdf6e2 55%, #cbb587 100%);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, .45);
+  transform-origin: 50% 100%;
 }
 
 /* Where a presented card comes to rest as the bail, straddling the stumps */
@@ -73,12 +83,28 @@
   pointer-events: none;
 }
 
-.stumps--hit { animation: stumpsFly 1.2s cubic-bezier(.2, .85, .3, 1) forwards; }
+/* One keyframe per stump, so they scatter in three different directions */
+.stumps--hit .stump:nth-child(1) { animation: stumpLeft 1.2s cubic-bezier(.2, .8, .3, 1) forwards; }
+.stumps--hit .stump:nth-child(2) { animation: stumpBack 1.2s cubic-bezier(.2, .8, .3, 1) forwards; }
+.stumps--hit .stump:nth-child(3) { animation: stumpRight 1.2s cubic-bezier(.2, .8, .3, 1) forwards; }
 
-@keyframes stumpsFly {
-  0%   { transform: translateX(-50%) rotate(0deg); }
-  12%  { transform: translateX(-46%) rotate(-9deg); }
-  100% { transform: translateX(120%) translateY(-40%) rotate(210deg); opacity: 0; }
+/* Y percentages are relative to the stump's own height, so they stay small */
+@keyframes stumpLeft {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  25%  { transform: translate(-330%, -34%) rotate(-130deg); opacity: 1; }
+  100% { transform: translate(-880%, -8%) rotate(-440deg); opacity: 0; }
+}
+
+@keyframes stumpBack {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  25%  { transform: translate(90%, -46%) rotate(100deg); opacity: 1; }
+  100% { transform: translate(220%, -78%) rotate(300deg) scale(.8); opacity: 0; }
+}
+
+@keyframes stumpRight {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  25%  { transform: translate(400%, -26%) rotate(150deg); opacity: 1; }
+  100% { transform: translate(980%, 6%) rotate(520deg); opacity: 0; }
 }
 
 /* The presented card is the live one; the flight itself is driven from animation.js */
@@ -107,7 +133,7 @@
 .ticket--away { opacity: .32; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stumps--hit { animation: none; opacity: 0; }
+  .stumps--hit .stump { animation: none; opacity: 0; }
 }
 
 /* Ticket #1 is reserved for the auction and cannot be bowled out until the final stage (R7). */

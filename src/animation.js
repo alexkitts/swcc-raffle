@@ -201,7 +201,7 @@ const Animation = (function () {
     if (!clone) return Promise.resolve();
     const animation = clone.animate([
       { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
-      { transform: 'translate(-34vw, -26vh) rotate(-220deg)', opacity: 0 }
+      { transform: 'translate(26vw, -34vh) rotate(265deg)', opacity: 0 }
     ], { duration: ms, easing: 'cubic-bezier(.2,.85,.3,1)', fill: 'forwards' });
     return animation.finished.catch(() => {}).then(() => {
       if (clone.parentNode) clone.parentNode.removeChild(clone);
@@ -209,13 +209,16 @@ const Animation = (function () {
   }
 
   // The bat swings in for anything the batsman actually connected with
-  function swingBat(ms) {
+  function swingBat(point, ms) {
     const host = overlays();
-    if (!host) return;
+    if (!host || !point) return;
     const bat = document.createElement('div');
     bat.className = 'bat';
+    bat.style.left = point.x + 'px';
+    bat.style.top = (point.y - 40) + 'px';
+    bat.style.animationDuration = Math.max(320, ms) + 'ms';
     host.appendChild(bat);
-    setTimeout(() => { if (bat.parentNode) bat.parentNode.removeChild(bat); }, ms + 250);
+    setTimeout(() => { if (bat.parentNode) bat.parentNode.removeChild(bat); }, Math.max(320, ms) + 160);
   }
 
   function hitStumps() {

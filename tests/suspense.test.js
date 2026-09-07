@@ -80,13 +80,14 @@ test('the first step never repeats the ticket already lit', () => {
   }
 });
 
-test('every round lands within a second of the target duration', () => {
+// Full coverage plus a readable ball means the length varies with where the victim sits in the cycle
+test('every round runs between twenty and thirty seconds', () => {
   for (let n = 2; n <= 10; n++) {
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
       const total = steps.reduce((sum, s) => sum + s.ms, 0);
-      assert.ok(Math.abs(total - Suspense.TARGET_MS) < 1000,
+      assert.ok(total >= 20000 && total <= 30000,
         n + ' remaining, victim ' + victim + ': ' + (total / 1000).toFixed(1) + 's');
     }
   }
@@ -121,12 +122,11 @@ test('the last deliveries slow down towards the kill', () => {
   assert.strictEqual(ms[0], ms[1], 'early deliveries should be evenly paced');
 });
 
-test('a shorter target still covers everyone, just faster', () => {
+test('a shorter target never speeds the ball past the readable floor', () => {
   const order = tickets(10);
   const quick = Suspense.planSteps(order, 1, 5, { targetMs: 8000 });
-  const slow = Suspense.planSteps(order, 1, 5, { targetMs: 20000 });
-  assert.strictEqual(new Set(quick.map(s => s.number)).size, 10);
-  assert.ok(quick[0].ms < slow[0].ms, 'a shorter target should step faster');
+  assert.strictEqual(new Set(quick.map(s => s.number)).size, 10, 'coverage must hold');
+  assert.ok(quick[0].baseMs >= 1300, 'stepped at ' + quick[0].baseMs + 'ms, below the floor');
   assert.strictEqual(quick[quick.length - 1].number, 5);
 });
 
@@ -171,4 +171,23 @@ test('each round picks up where the last one stopped', () => {
 test('litAfterKill copes with a victim that is not in the order', () => {
   assert.strictEqual(Suspense.litAfterKill([1, 2, 3], 99), null);
   assert.strictEqual(Suspense.litAfterKill([], 1), null);
+});
+
+test('the ball flight is the same on every delivery, including the wicket', () => {
+  const steps = Suspense.planSteps(tickets(10), 1, 8);
+  const bases = new Set(steps.map(s => s.baseMs));
+  assert.strictEqual(bases.size, 1, 'baseMs varied: ' + [...bases].join(','));
+  assert.ok(steps[steps.length - 1].ms > steps[0].ms, 'the kill should still linger longer');
+  assert.strictEqual(steps[steps.length - 1].baseMs, steps[0].baseMs,
+    'the wicket delivery must not fly slower than the rest');
+});
+
+test('the base step is never so short that a readable ball will not fit', () => {
+  for (let n = 2; n <= 10; n++) {
+    const order = Suspense.drawOrder(tickets(n), seeded(n));
+    for (const victim of order) {
+      const steps = Suspense.planSteps(order, order[0], victim);
+      assert.ok(steps[0].baseMs >= 1300, n + ' remaining gave a base step of ' + steps[0].baseMs + 'ms');
+    }
+  }
 });

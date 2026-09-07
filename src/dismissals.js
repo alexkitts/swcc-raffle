@@ -24,24 +24,45 @@ const Dismissals = (function () {
     'Hit Wicket: Cutting the Off Spinner!',
     "LBW: You've Middled It!",
     'Mankad by the Bowler!',
-    'Stumped Off a Wide!'
+    'Stumped Off a Wide!',
+    'Bowled: Played All Round It!',
+    'Caught and Bowled: Straight Back at Him!',
+    'Run Out: Ball Deflected Off the Umpire!',
+    'Timed Out: Still at the Bar!',
+    'Obstructing the Field: Barged the Keeper!',
+    'Handled the Ball: Picked It Up and Apologised!',
+    'Hit the Ball Twice: Once for Luck!',
+    'Caught at Deep Midwicket: Should Have Walked!'
   ]);
 
   // What happens when the delivery does not take the wicket; kind drives the ball's path
   const SURVIVED = Object.freeze([
     { text: 'Wide!', kind: 'wide' },
+    { text: 'Wide down the leg side.', kind: 'wide' },
     { text: 'Played and missed!', kind: 'wide' },
+    { text: 'Beaten all ends up!', kind: 'wide' },
     { text: 'Bouncer, no shot.', kind: 'wide' },
-    { text: 'Down the leg side.', kind: 'wide' },
+    { text: 'Sails past the off stump.', kind: 'wide' },
+    { text: 'No ball!', kind: 'wide' },
+    { text: 'Through the gate, misses everything!', kind: 'wide' },
     { text: 'Defended.', kind: 'defended' },
     { text: 'Solid block.', kind: 'defended' },
     { text: 'Edged, but safe!', kind: 'defended' },
+    { text: 'Dead bat, no run.', kind: 'defended' },
+    { text: 'Straight to the fielder.', kind: 'defended' },
+    { text: 'Chipped it, dropped short!', kind: 'defended' },
+    { text: 'Inside edge onto the pad!', kind: 'defended' },
+    { text: 'Leaves it alone.', kind: 'defended' },
     { text: 'Run for 1!', kind: 'single' },
     { text: 'Quick single!', kind: 'single' },
     { text: 'Two runs!', kind: 'single' },
+    { text: 'Nudged into the gap, one run.', kind: 'single' },
+    { text: 'Scampers a leg bye!', kind: 'single' },
+    { text: 'Three! Great running.', kind: 'single' },
     { text: 'FOUR!', kind: 'four' },
     { text: 'Thick edge, FOUR!', kind: 'four' },
     { text: 'Cracked through the covers, FOUR!', kind: 'four' },
+    { text: 'Glanced fine, FOUR!', kind: 'four' },
     { text: 'SIX! Out of the ground!', kind: 'six' },
     { text: 'SIX! Into the car park!', kind: 'six' }
   ]);

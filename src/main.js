@@ -72,10 +72,11 @@
     const slot = el('bail-slot');
     const stumps = el('stumps');
 
-    const presentMs = Math.round(step.ms * 0.20);
-    const ballMs = Math.round(step.ms * 0.36);
-    const dwellMs = Math.round(step.ms * 0.26);
-    const returnMs = Math.round(step.ms * 0.18);
+    // Timed off baseMs, never the decelerated ms, so the wicket ball does not fly slower and give itself away
+    const presentMs = Math.round(step.baseMs * 0.16);
+    const ballMs = Math.round(step.baseMs * 0.50);
+    const returnMs = Math.round(step.baseMs * 0.14);
+    const dwellMs = Math.max(140, step.ms - presentMs - ballMs - returnMs);
 
     const bail = await Animation.presentToBail(cell, slot, presentMs);
     if (Store.generation() !== startGen) return;
@@ -104,7 +105,7 @@
       ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumps.getBoundingClientRect().width * 2.2, y: aim.y }
       : aim;
 
-    if (!wide) Animation.swingBat(ballMs + dwellMs);
+    if (!wide) Animation.swingBat(aim, ballMs * 0.9);
     const landed = await Animation.bowlAt(target, ballMs);
     if (Store.generation() !== startGen) return;
 

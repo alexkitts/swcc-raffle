@@ -3,7 +3,7 @@
 const Suspense = (function () {
   const PREFERRED_STEP_MS = 1800;
   const TARGET_MS = 20000;
-  const MIN_STEP_MS = 700;
+  const MIN_STEP_MS = 1300;
   const MAX_STEP_MS = 3200;
 
   // Multipliers for the last deliveries, so the spotlight slows into the kill
@@ -54,6 +54,7 @@ const Suspense = (function () {
       steps.push({
         number: order[(litIndex + 1 + i) % n],
         ms: Math.round(stepMs * factor),
+        baseMs: Math.round(stepMs),
         kill: i === total - 1
       });
     }
