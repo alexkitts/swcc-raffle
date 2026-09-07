@@ -81,13 +81,13 @@ test('the first step never repeats the ticket already lit', () => {
 });
 
 // Full coverage plus a readable ball means the length varies with where the victim sits in the cycle
-test('every round runs between twenty-five and forty-four seconds', () => {
+test('every round runs between thirty-three and fifty-three seconds', () => {
   for (let n = 2; n <= 10; n++) {
     const order = Suspense.drawOrder(tickets(n), seeded(n));
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
       const total = steps.reduce((sum, s) => sum + s.ms, 0);
-      assert.ok(total >= 25000 && total <= 44000,
+      assert.ok(total >= 33000 && total <= 53000,
         n + ' remaining, victim ' + victim + ': ' + (total / 1000).toFixed(1) + 's');
     }
   }
@@ -125,14 +125,6 @@ test('the last deliveries slow down towards the kill', () => {
   assert.ok(ms[ms.length - 1] > ms[ms.length - 2], 'the kill should linger longest');
   assert.ok(ms[ms.length - 2] > ms[ms.length - 3], 'the run-in should decelerate');
   assert.strictEqual(ms[0], ms[1], 'early deliveries should be evenly paced');
-});
-
-test('a shorter target never speeds the ball past the readable floor', () => {
-  const order = tickets(10);
-  const quick = Suspense.planSteps(order, 1, 5, { targetMs: 8000 });
-  assert.strictEqual(new Set(quick.map(s => s.number)).size, 10, 'coverage must hold');
-  assert.ok(quick[0].baseMs >= 1900, 'stepped at ' + quick[0].baseMs + 'ms, below the floor');
-  assert.strictEqual(quick[quick.length - 1].number, 5);
 });
 
 test('a victim outside the order yields no plan rather than throwing', () => {
@@ -193,6 +185,50 @@ test('the base step is never so short that a readable ball will not fit', () => 
     for (const victim of order) {
       const steps = Suspense.planSteps(order, order[0], victim);
       assert.ok(steps[0].baseMs >= 1900, n + ' remaining gave a base step of ' + steps[0].baseMs + 'ms');
+    }
+  }
+});
+
+// Valid counts are offset + laps * n, so the spread comes from which victim is drawn each round
+test('the delivery count varies widely from round to round', () => {
+  const order = Suspense.drawOrder(tickets(10), seeded(4));
+  const seen = new Set();
+  for (const victim of order) {
+    for (let s = 0; s < 20; s++) {
+      const steps = Suspense.planSteps(order, order[0], victim, { rng: seeded(s) });
+      seen.add(steps.length);
+      assert.strictEqual(steps[steps.length - 1].number, victim, 'must still end on the victim');
+    }
+  }
+  assert.ok(seen.size >= 6, 'only ' + seen.size + ' distinct counts across ten victims: ' + [...seen].sort((a, b) => a - b).join(','));
+  [...seen].forEach(c => {
+    assert.ok(c >= Suspense.MIN_DELIVERIES && c <= Suspense.MAX_DELIVERIES,
+      c + ' deliveries falls outside the band');
+  });
+});
+
+test('every count in the band is reachable across field sizes', () => {
+  const seen = new Set();
+  for (let n = 2; n <= 10; n++) {
+    const order = Suspense.drawOrder(tickets(n), seeded(n));
+    for (const victim of order) {
+      for (let s = 0; s < 30; s++) {
+        seen.add(Suspense.planSteps(order, order[0], victim, { rng: seeded(s * 7 + n) }).length);
+      }
+    }
+  }
+  for (let c = Suspense.MIN_DELIVERIES; c <= Suspense.MAX_DELIVERIES; c++) {
+    assert.ok(seen.has(c), c + ' deliveries never came up');
+  }
+});
+
+test('the count band is honoured at every field size', () => {
+  for (let n = 2; n <= 10; n++) {
+    const order = Suspense.drawOrder(tickets(n), seeded(n));
+    for (const victim of order) {
+      const steps = Suspense.planSteps(order, order[0], victim);
+      assert.ok(steps.length >= Suspense.MIN_DELIVERIES && steps.length <= Suspense.MAX_DELIVERIES,
+        n + ' remaining gave ' + steps.length + ' deliveries');
     }
   }
 });

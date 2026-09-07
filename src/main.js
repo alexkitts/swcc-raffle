@@ -62,6 +62,9 @@
     }
 
     Store.setSpotlight(Suspense.litAfterKill(order, victim));
+
+    // Let the scatter land, then stand the wicket back up ready for the next round
+    setTimeout(Animation.resetStumps, 2500);
   }
 
   // One delivery: the card becomes the bail, the ball is bowled, and the wicket either falls or does not
@@ -81,12 +84,13 @@
     const bail = await Animation.presentToBail(cell, slot, presentMs);
     if (Store.generation() !== startGen) return;
 
-    const aim = Animation.centreOf(stumps);
+    const aim = Animation.stumpTarget(stumps);
     const outcome = step.kill ? null : Dismissals.pickSurvival();
     const wide = !step.kill && outcome.kind === 'wide';
 
-    // The bat swings on every delivery, wicket included, or its absence would announce the out
-    Animation.swingBat(aim, Math.round(ballMs * 1.05));
+    // Swings on every delivery so its absence cannot announce the out, timed to meet the ball
+    const batMs = 520;
+    Animation.swingBat(aim, batMs, Math.round(ballMs - batMs * 0.5));
 
     // A wide passes just outside the stumps rather than halfway across the screen
     const stumpsWidth = stumps.getBoundingClientRect().width;

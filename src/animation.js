@@ -104,6 +104,12 @@ const Animation = (function () {
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   };
 
+  // Low on the stumps rather than mid-height, which is where a delivery would actually pitch up
+  const stumpTarget = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height * 0.74 };
+  };
+
   // Arcs the ball to a point rather than an element, so a wide can miss on purpose
   function bowlAt(point, ms) {
     const el = ball();
@@ -215,16 +221,23 @@ const Animation = (function () {
   }
 
   // The bat swings in for anything the batsman actually connected with
-  function swingBat(point, ms) {
+  function swingBat(point, ms, delayMs) {
     const host = overlays();
     if (!host || !point) return;
+    const duration = Math.max(320, ms);
+    const delay = Math.max(0, delayMs || 0);
+
     const bat = document.createElement('div');
     bat.className = 'bat';
     bat.style.left = point.x + 'px';
-    bat.style.top = (point.y - 40) + 'px';
-    bat.style.animationDuration = Math.max(320, ms) + 'ms';
+    bat.style.animationDuration = duration + 'ms';
+    bat.style.animationDelay = delay + 'ms';
     host.appendChild(bat);
-    setTimeout(() => { if (bat.parentNode) bat.parentNode.removeChild(bat); }, Math.max(320, ms) + 160);
+
+    // Hang it so the blade covers the aim point, now that its height is known
+    bat.style.top = (point.y - bat.offsetHeight * 0.72) + 'px';
+
+    setTimeout(() => { if (bat.parentNode) bat.parentNode.removeChild(bat); }, delay + duration + 160);
   }
 
   function hitStumps() {
@@ -258,7 +271,7 @@ const Animation = (function () {
     throwBall, strike, resetBall, clearOverlays,
     bowlAt, ballAway, presentToBail, returnFromBail, bailBowled,
     swingBat, hitStumps, resetStumps, showOutcome, centreOf,
-    showWicketPopup, showWinnerBanner
+    showWicketPopup, showWinnerBanner, stumpTarget
   };
 })();
 
