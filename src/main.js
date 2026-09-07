@@ -88,9 +88,9 @@
     const outcome = step.kill ? null : Dismissals.pickSurvival();
     const wide = !step.kill && outcome.kind === 'wide';
 
-    // Swings on every delivery so its absence cannot announce the out, timed to meet the ball
-    const batMs = 520;
-    Animation.swingBat(aim, batMs, Math.round(ballMs - batMs * 0.5));
+    // The keyframes hold a backlift then cross the ball line at 72%, hence the duration
+    const batMs = Math.round(ballMs / 0.72);
+    Animation.swingBat(aim, batMs, 0);
 
     // A wide passes just outside the stumps rather than halfway across the screen
     const stumpsWidth = stumps.getBoundingClientRect().width;
@@ -98,11 +98,11 @@
       ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumpsWidth * 0.85, y: aim.y }
       : aim;
 
-    const landed = (await Animation.bowlAt(target, ballMs)) || { dx: 0, dy: 0 };
-    if (Store.generation() !== startGen) return;
+    // Just before impact: awaiting the flight put the thwack late, and audio adds its own latency
+    const contact = wide ? null : setTimeout(Sound.wicket, Math.max(0, ballMs - 80));
 
-    // Contact makes a noise, whether it hits the stumps or the bat; a wide hits nothing
-    if (!wide) Sound.wicket();
+    const landed = (await Animation.bowlAt(target, ballMs)) || { dx: 0, dy: 0 };
+    if (Store.generation() !== startGen) { clearTimeout(contact); return; }
 
     if (step.kill) {
       Animation.hitStumps();
