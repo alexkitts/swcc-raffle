@@ -1,0 +1,42 @@
+.scoreboard {
+  background: var(--brown-dark);
+  color: var(--white);
+  border: 4px solid var(--gold);
+  font-family: var(--mono);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 10px);
+}
+
+.scoreboard-header {
+  background: var(--gold);
+  color: var(--brown);
+  padding: 8px;
+  font-weight: bold;
+}
+
+.scoreboard-stats {
+  padding: 6px;
+  border-bottom: 1px solid #5a4332;
+  font-size: clamp(.9rem, 1.4vw, 1.3rem);
+  color: var(--gold);
+}
+
+.scoreboard-content {
+  padding: 8px;
+  text-align: left;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.scoreboard-placeholder { text-align: center; color: #888; font-style: italic; margin-top: 20px; }
+.scoreboard-stage-heading { text-align: center; color: var(--gold); font-weight: bold; margin-bottom: 10px; }
+
+.wicket-entry {
+  padding: 4px;
+  border-bottom: 2px solid #5a4332;
+  font-size: clamp(.85rem, 1.2vw, 1.1rem);
+}
+
+.wicket-entry:last-child { border-bottom: none; }

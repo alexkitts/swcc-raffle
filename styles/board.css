@@ -1,0 +1,94 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr));
+  gap: 6px;
+  width: 100%;
+  flex: 1;
+  align-content: start;
+  padding: 4px;
+}
+
+.board:empty { display: none; }
+
+.ticket {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--brown);
+  border-radius: 5px;
+  background: var(--white);
+  color: #000;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(.75rem, 1.1vw, 1.15rem);
+  min-height: 2.6rem;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, .3);
+  transition: background .3s, transform .3s;
+}
+
+.ticket--out {
+  background: var(--gold);
+  color: var(--white);
+  text-decoration: line-through;
+  transform: rotate(7deg) translateY(-6px);
+  border-color: var(--gold-dark);
+}
+
+.ticket--struck { transform: scale(1.2) rotate(15deg); }
+
+/* Ticket #1 is reserved for the auction and cannot be bowled out until the final stage (R7). */
+.ticket--auction:not(.ticket--out) {
+  background: linear-gradient(45deg, #fff, #fffacd);
+  border-color: gold;
+  box-shadow: 0 0 10px rgba(255, 215, 0, .5);
+  position: relative;
+}
+
+.ticket--auction:not(.ticket--out)::after {
+  content: "\1F6E1";
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: .7rem;
+  background: gold;
+  border-radius: 50%;
+  width: 1.1rem;
+  height: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Final stage: fewer, bigger cells showing names. */
+.board--final { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 12px; }
+
+.board--final .ticket { flex-direction: column; min-height: 6rem; padding: 8px; }
+
+.board--final .ticket-name {
+  font-weight: bold;
+  color: var(--brown);
+  font-size: clamp(1rem, 1.6vw, 1.6rem);
+  line-height: 1.15;
+}
+
+.board--final .ticket-number {
+  font-weight: bold;
+  color: #666;
+  font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+}
+
+.board--final .ticket--out .ticket-name { color: var(--white); }
+.board--final .ticket--out .ticket-number { color: var(--gold-dark); }
+
+.ball {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  background: url('../images/ball.png') center/cover no-repeat;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 5;
+}

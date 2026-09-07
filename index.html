@@ -1,50 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>South Wingfield Cricket Club Raffle</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="app.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>South Wingfield Cricket Club Raffle</title>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/board.css">
+  <link rel="stylesheet" href="styles/scoreboard.css">
+  <link rel="stylesheet" href="styles/overlays.css">
 </head>
 <body>
-    <div class="logo">
-        <img src="./images/logo.png" alt="SWCC Logo">
+  <main class="main-content">
+    <header class="topbar">
+      <img class="logo" id="logo" src="./images/logo.png" alt="SWCC">
+      <h1>&#127951; SWCC REVERSE RAFFLE DRAW &#127951;</h1>
+      <div class="controls">
+        <input type="file" id="csv-upload" accept=".csv" hidden>
+        <input type="file" id="import-input" accept=".json" hidden>
+        <button id="upload-btn" type="button">&#128194; Upload CSV</button>
+        <a href="./template.csv" download="template.csv" id="template-link" class="btn">&#128229; Template</a>
+        <button id="export-btn" type="button">&#128190; Export progress</button>
+        <button id="import-btn" type="button">&#128193; Import progress</button>
+        <button id="reset-btn" type="button">&#9888; Reset draw</button>
+      </div>
+    </header>
+
+    <div class="bowl-row">
+      <label for="drop-size">Knock out per ball</label>
+      <select id="drop-size"></select>
+      <button id="throw" class="bowlbutton" type="button" disabled>Bowl Ball</button>
     </div>
-    <div class="csv-controls">
-        <input type="file" id="csv-upload" accept=".csv" style="display: none;">
-        <button id="upload-btn">📂 Upload CSV</button>
-        <a href="./template.csv" download="template.csv" id="template-link">📥 Download Template</a>
+
+    <div id="storage-warning" class="banner banner--warning" hidden></div>
+    <div id="load-summary" class="banner" hidden></div>
+
+    <div id="resume-prompt" class="banner banner--resume" hidden>
+      <span id="resume-text"></span>
+      <button id="resume-yes" type="button">Resume</button>
+      <button id="resume-no" type="button">Start fresh</button>
     </div>
-    <div class="main-content">
-        <h1>🏏 SWCC REVERSE RAFFLE DRAW 🏏</h1>
-        <button id="throw" class="bowlbutton" disabled>Bowl Ball</button>
-        <div id="upload-message" class="upload-message">
-            <h2>🏏 Welcome to the SWCC Reverse Raffle Draw! 🏏</h2>
-            <p>To get started:</p>
-            <ol>
-                <li>📥 <strong>Download the template</strong> (top right corner)</li>
-                <li>✏️ <strong>Add your players</strong> (Name, Number format)</li>
-                <li>📂 <strong>Upload your CSV</strong> to begin the draw!</li>
-            </ol>
-        </div>
-        <table class="players" id="players">
-            <!-- Table will be populated by JavaScript -->
-        </table>
-        <div class="ball" id="ball"></div>
+
+    <section id="upload-message" class="upload-message">
+      <h2>&#127951; Welcome to the SWCC Reverse Raffle Draw! &#127951;</h2>
+      <p>To get started:</p>
+      <ol>
+        <li>&#128229; <strong>Download the template</strong> (top right)</li>
+        <li>&#9999;&#65039; <strong>Add your players</strong> (Name, Number)</li>
+        <li>&#128194; <strong>Upload your CSV</strong> to begin the draw!</li>
+      </ol>
+    </section>
+
+    <div class="board" id="board"></div>
+    <div class="ball" id="ball"></div>
+  </main>
+
+  <aside class="scoreboard">
+    <div class="scoreboard-header">SCOREBOARD</div>
+    <div class="scoreboard-stats">
+      <div>WICKETS: <span id="wicket-count">0</span>/<span id="total-count">0</span></div>
+      <div>REMAINING: <span id="remaining-count">0</span></div>
     </div>
-    
-    <div class="scoreboard">
-        <div class="scoreboard-header">SCOREBOARD</div>
-        <div class="scoreboard-stats">
-            <div>WICKETS: <span id="wicket-count">0</span>/<span id="total-count">0</span></div>
-            <div>REMAINING: <span id="remaining-count">0</span></div>
-        </div>
-        <div class="scoreboard-content" id="scoreboard-content">
-            <div style="text-align: center; color: #666; font-style: italic; margin-top: 20px;">
-                Wickets will appear here...
-            </div>
-        </div>
-    </div>
+    <div class="scoreboard-content" id="scoreboard-content"></div>
+  </aside>
+
+  <div id="overlays"></div>
+
+  <script src="src/rules.js"></script>
+  <script src="src/csv.js"></script>
+  <script src="src/dismissals.js"></script>
+  <script src="src/state.js"></script>
+  <script src="src/persistence.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/animation.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/auction.js"></script>
+  <script src="src/main.js"></script>
 </body>
 </html>
