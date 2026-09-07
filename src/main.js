@@ -34,26 +34,28 @@
     bowling = true;
     Store.beginRound(targets);
 
-    for (let i = 0; i < targets.length; i++) {
-      const number = targets[i];
-      const cell = Render.cellFor(number);
+    try {
+      for (let i = 0; i < targets.length; i++) {
+        const number = targets[i];
+        const cell = Render.cellFor(number);
 
-      await Animation.throwBall(cell, Store.get().settings.ballMs);
+        await Animation.throwBall(cell, Store.get().settings.ballMs);
 
-      Animation.strike(cell);
-      Sound.wicket();
-      Store.eliminate(number);
+        Animation.strike(cell);
+        Sound.wicket();
+        Store.eliminate(number);
 
-      const entry = Store.get().eliminated[Store.get().eliminated.length - 1];
-      if (entry) {
-        Animation.showWicketPopup(entry.number, entry.dismissal, entry.stage === 'final' ? 10000 : 2000);
+        const entry = Store.get().eliminated[Store.get().eliminated.length - 1];
+        if (entry) {
+          Animation.showWicketPopup(entry.number, entry.dismissal, entry.stage === 'final' ? 10000 : 2000);
+        }
+
+        if (i < targets.length - 1) await delay(Store.get().settings.interBallMs);
       }
-
-      if (i < targets.length - 1) await delay(Store.get().settings.interBallMs);
+    } finally {
+      Store.endRound();
+      bowling = false;
     }
-
-    Store.endRound();
-    bowling = false;
 
     const after = Store.get();
     if (after.phase === 'auction') setTimeout(showAuction, 1000);
