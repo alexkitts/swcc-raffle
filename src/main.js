@@ -6,11 +6,12 @@
 
   let storageOk = false;
   let bowling = false;
+  let persistArmed = false;
 
   // ---- persistence wiring ----
 
   function persist() {
-    if (storageOk) Persistence.save(Store.get());
+    if (storageOk && persistArmed) Persistence.save(Store.get());
   }
 
   // ---- auction wiring ----
@@ -31,15 +32,18 @@
     const targets = Rules.pickTargets(Rules.eligibleTargets(state), drop);
     if (!targets.length) return;
 
+    const startGen = Store.generation();
     bowling = true;
     Store.beginRound(targets);
 
     try {
       for (let i = 0; i < targets.length; i++) {
+        if (Store.generation() !== startGen) break;
         const number = targets[i];
         const cell = Render.cellFor(number);
 
         await Animation.throwBall(cell, Store.get().settings.ballMs);
+        if (Store.generation() !== startGen) break;
 
         Animation.strike(cell);
         Sound.wicket();
@@ -53,13 +57,15 @@
         if (i < targets.length - 1) await delay(Store.get().settings.interBallMs);
       }
     } finally {
-      Store.endRound();
+      if (Store.generation() === startGen) Store.endRound();
       bowling = false;
-    }
 
-    const after = Store.get();
-    if (after.phase === 'auction') setTimeout(showAuction, 1000);
-    if (after.phase === 'won') showWinner();
+      if (Store.generation() === startGen) {
+        const after = Store.get();
+        if (after.phase === 'auction') setTimeout(showAuction, 1000);
+        if (after.phase === 'won') showWinner();
+      }
+    }
   }
 
   function showWinner() {
@@ -155,6 +161,12 @@
 
   // ---- boot ----
 
+  function setPreDecisionControlsDisabled(disabled) {
+    el('upload-btn').disabled = disabled;
+    el('import-btn').disabled = disabled;
+    el('reset-btn').disabled = disabled;
+  }
+
   function boot() {
     Render.mount();
     wireControls();
@@ -166,15 +178,25 @@
 
     const saved = storageOk ? Persistence.load() : null;
     if (saved && Persistence.isResumable(saved)) {
+      setPreDecisionControlsDisabled(true);
       Render.showResumePrompt(
         saved,
         () => {
+          setPreDecisionControlsDisabled(false);
+          persistArmed = true;
           if (!Store.hydrate(saved)) { Persistence.clear(); Store.reset(); return; }
           if (Store.get().phase === 'auction') showAuction();
           if (Store.get().phase === 'won') showWinner();
         },
-        () => { Persistence.clear(); Store.reset(); }
+        () => {
+          setPreDecisionControlsDisabled(false);
+          persistArmed = true;
+          Persistence.clear();
+          Store.reset();
+        }
       );
+    } else {
+      persistArmed = true;
     }
 
     Render.apply(Store.get());

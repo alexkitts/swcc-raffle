@@ -41,7 +41,7 @@ const Csv = (function () {
 
     const tickets = [];
     const warnings = [];
-    const seen = new Set();
+    const counts = new Map();
     let skipped = 0;
 
     for (const cells of rows) {
@@ -50,9 +50,21 @@ const Csv = (function () {
       if (!name || !/^\d+$/.test(raw)) { skipped++; continue; }
       const number = Number(raw);
       if (!Number.isInteger(number) || number < 1) { skipped++; continue; }
-      if (seen.has(number)) warnings.push('Ticket #' + number + ' appears more than once.');
-      seen.add(number);
+      counts.set(number, (counts.get(number) || 0) + 1);
       tickets.push({ number: number, name: name });
+    }
+
+    const duplicates = [];
+    counts.forEach((count, number) => { if (count > 1) duplicates.push(number); });
+    if (duplicates.length) {
+      duplicates.sort((a, b) => a - b);
+      const named = duplicates.map(n => '#' + n).join(', ');
+      return {
+        ok: false,
+        error: 'Duplicate ticket numbers: ' + named + '. Every ticket must have a unique number.',
+        tickets: [],
+        summary: null
+      };
     }
 
     if (!tickets.length) {

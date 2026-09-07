@@ -229,3 +229,59 @@ test('hydrate rejects junk', () => {
   assert.strictEqual(Store.hydrate({}), false);
   assert.strictEqual(Store.hydrate({ schemaVersion: 1 }), false);
 });
+
+test('hydrate re-evaluates phase rather than trusting the saved value', () => {
+  load(2);
+  Store.beginRound([2]); Store.eliminate(2); Store.endRound();
+  assert.strictEqual(Store.get().phase, 'won');
+  const saved = JSON.parse(JSON.stringify(Store.get()));
+  saved.phase = 'final';   // a stale save captured between eliminate and endRound
+  Store.reset();
+  Store.hydrate(saved);
+  assert.strictEqual(Store.get().phase, 'won');
+});
+
+test('generation increments on reset, loadTickets and hydrate', () => {
+  Store.reset();
+  const g0 = Store.generation();
+  load(20);
+  const g1 = Store.generation();
+  assert.ok(g1 > g0);
+
+  Store.reset();
+  const g2 = Store.generation();
+  assert.ok(g2 > g1);
+
+  load(20);
+  Store.beginRound([5]); Store.eliminate(5); Store.endRound();
+  const saved = JSON.parse(JSON.stringify(Store.get()));
+  const g3 = Store.generation();
+  Store.hydrate(saved);
+  const g4 = Store.generation();
+  assert.ok(g4 > g3);
+});
+
+test('eliminate refuses a number outside the live round\'s targets', () => {
+  load(20);
+  Store.beginRound([5, 6]);
+  Store.eliminate(7);
+  assert.strictEqual(Store.get().eliminated.length, 0);
+  assert.strictEqual(Store.get().round.thrown, 0);
+});
+
+test('resolveAuction is a no-op outside the auction phase', () => {
+  load(20);
+  assert.strictEqual(Store.get().phase, 'bulk');
+  Store.resolveAuction('Someone Else');
+  assert.strictEqual(Store.get().phase, 'bulk');
+  assert.strictEqual(Store.get().auctionResolved, false);
+  assert.strictEqual(Store.get().tickets.find(t => t.number === 1).name, 'Player 1');
+});
+
+test('skipAuction is a no-op outside the auction phase', () => {
+  load(20);
+  assert.strictEqual(Store.get().phase, 'bulk');
+  Store.skipAuction();
+  assert.strictEqual(Store.get().phase, 'bulk');
+  assert.strictEqual(Store.get().auctionResolved, false);
+});

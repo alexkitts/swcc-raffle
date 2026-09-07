@@ -8,6 +8,7 @@ const Store = (function () {
 
   let state = blank();
   const listeners = [];
+  let gen = 0;
 
   function blank() {
     return {
@@ -24,6 +25,7 @@ const Store = (function () {
   }
 
   function get() { return state; }
+  function generation() { return gen; }
   function subscribe(fn) { listeners.push(fn); }
   function emit() { listeners.forEach(fn => fn(state)); }
 
@@ -67,12 +69,13 @@ const Store = (function () {
 
   // ---- mutations ----
 
-  function reset() { state = blank(); emit(); }
+  function reset() { state = blank(); gen++; emit(); }
 
   function loadTickets(tickets, summary) {
     state = blank();
     state.tickets = tickets.map(t => ({ number: t.number, name: t.name }));
     state.loadSummary = summary;
+    gen++;
     advancePhase();
     emit();
   }
@@ -89,6 +92,7 @@ const Store = (function () {
   }
 
   function eliminate(number) {
+    if (state.round && state.round.targets.indexOf(number) === -1) return;
     if (state.eliminated.some(e => e.number === number)) return;
     const ticket = state.tickets.find(t => t.number === number);
     if (!ticket) return;
@@ -115,6 +119,7 @@ const Store = (function () {
   }
 
   function resolveAuction(name) {
+    if (state.phase !== 'auction') return;
     const trimmed = String(name == null ? '' : name).trim();
     if (trimmed) {
       const one = state.tickets.find(RulesRef.isAuctionTicket);
@@ -126,6 +131,7 @@ const Store = (function () {
   }
 
   function skipAuction() {
+    if (state.phase !== 'auction') return;
     state.auctionResolved = true;
     advancePhase();
     emit();
@@ -147,13 +153,15 @@ const Store = (function () {
       auctionResolved: !!saved.auctionResolved,
       loadSummary: saved.loadSummary || null
     };
+    gen++;
+    advancePhase();
     emit();
     return true;
   }
 
   return {
     SCHEMA_VERSION,
-    get, subscribe, reset,
+    get, generation, subscribe, reset,
     loadTickets, setDropSize,
     beginRound, eliminate, endRound,
     resolveAuction, skipAuction, hydrate,

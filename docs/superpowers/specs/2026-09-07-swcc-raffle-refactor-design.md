@@ -274,7 +274,19 @@ Validation:
 
 - `number` must parse as a positive integer. Invalid rows are skipped and counted.
 - `name` must be non-empty. Invalid rows are skipped and counted.
-- Duplicate ticket numbers are kept but recorded as a warning.
+- **Duplicate ticket numbers are an error; nothing is loaded.** The message names
+  the duplicated numbers so the operator can fix the sheet and re-upload.
+
+  *Amended after the final whole-branch review.* This originally said duplicates
+  were kept with a warning. That is not safely implementable against a board keyed
+  by ticket number: the renderer's cell map would silently drop one copy (leaving a
+  struck-out ticket displayed as alive), `remainingTickets` would remove both rows
+  on a single elimination so the counts disagreed with the visible cells, and if the
+  duplicated pair were the last survivors the winner would never be determined at
+  all. For a draw involving real money, refusing the file and naming the offending
+  numbers is the correct behaviour — the operator uploads minutes before the draw
+  and can fix a duplicate in seconds, whereas a silently mis-drawn board cannot be
+  undone.
 - More than 250 valid rows is an error; nothing is loaded.
 - Zero valid rows is an error; nothing is loaded.
 

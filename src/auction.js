@@ -58,7 +58,6 @@ const Auction = (function () {
     document.getElementById('overlays').appendChild(backdrop);
 
     function close() {
-      document.removeEventListener('keydown', onKeydown);
       if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
     }
 
@@ -79,7 +78,7 @@ const Auction = (function () {
       if (event.key === 'Enter') { event.preventDefault(); confirm.click(); }
       if (event.key === 'Escape') { event.preventDefault(); cancel.click(); }
     }
-    document.addEventListener('keydown', onKeydown);
+    backdrop.addEventListener('keydown', onKeydown);
 
     setTimeout(() => input.focus(), 100);
   }

@@ -90,11 +90,13 @@ test('skips and counts rows with no name', () => {
   assert.strictEqual(r.summary.skipped, 1);
 });
 
-test('keeps duplicate ticket numbers but warns about them', () => {
-  const r = Csv.parse('A,1\nB,1\n');
-  assert.strictEqual(r.tickets.length, 2);
-  assert.strictEqual(r.summary.warnings.length, 1);
-  assert.match(r.summary.warnings[0], /#1/);
+test('rejects a file with duplicate ticket numbers, naming them', () => {
+  const r = Csv.parse('A,1\nB,1\nC,43\nD,43\nE,77\n');
+  assert.strictEqual(r.ok, false);
+  assert.deepStrictEqual(r.tickets, []);
+  assert.match(r.error, /#1/);
+  assert.match(r.error, /#43/);
+  assert.doesNotMatch(r.error, /#77/);
 });
 
 test('does not warn about duplicate names, which are expected', () => {
