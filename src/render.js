@@ -44,7 +44,8 @@ const Render = (function () {
     tickets.forEach(ticket => {
       const cell = document.createElement('div');
       cell.className = 'ticket';
-      if (Rules.isAuctionTicket(ticket)) cell.classList.add('ticket--auction');
+      // The shield means protected, so it goes once the auction is settled and #1 can be bowled
+      if (Rules.isAuctionTicket(ticket) && mode === 'bulk') cell.classList.add('ticket--auction');
       cell.dataset.number = String(ticket.number);
 
       if (mode === 'final') {

@@ -148,9 +148,6 @@
   position: relative;
 }
 
-/* The grey number has no contrast against the gold shield behind it */
-.board--final .ticket--auction:not(.ticket--out) .ticket-number { color: var(--brown); }
-
 /* Final stage: fewer, bigger cells showing names. */
 /* Overflow is visible so the lifted card is not clipped; the body still clips at the viewport */
 .board--final { gap: 12px; overflow: visible; }
