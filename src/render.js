@@ -17,9 +17,9 @@ const Render = (function () {
     });
   }
 
+  // 'auction' stays on the bulk board, so the rebuild happens after the winner's name is set
   function boardMode(state) {
-    return (state.phase === 'final' || state.phase === 'won' || state.phase === 'auction')
-      ? 'final' : 'bulk';
+    return (state.phase === 'final' || state.phase === 'won') ? 'final' : 'bulk';
   }
 
   // The final board is the bulk-stage survivors, a set final-stage eliminations do not change
