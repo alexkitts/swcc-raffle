@@ -19,15 +19,19 @@ body {
   color: var(--white);
   margin: 0;
   padding: 5px;
-  min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 30%);
   gap: var(--gap);
   text-align: center;
 }
 
+/* A fixed screen, so the board's height depends on the viewport and never on its own contents */
+@media (min-width: 901px) {
+  body { height: 100dvh; overflow: hidden; }
+}
+
 @media (max-width: 900px) {
-  body { grid-template-columns: minmax(0, 1fr); }
+  body { grid-template-columns: minmax(0, 1fr); min-height: 100dvh; }
 }
 
 h1 {

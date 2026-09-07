@@ -149,6 +149,13 @@
       });
     });
 
+    // The grid is sized from the board box, so it has to be recomputed when that box changes
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(Render.fitBoard, 120);
+    });
+
     // A native confirm works, unlike the F5/Ctrl+R interception it replaces
     window.addEventListener('beforeunload', (event) => {
       const state = Store.get();

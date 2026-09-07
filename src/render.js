@@ -67,6 +67,19 @@ const Render = (function () {
     builtFor = signatureOf(state);
   }
 
+  // Sizes the grid to the board box so the cells fill the screen at any ticket count.
+  // Must run after paintControls, which hides the upload message and so changes the box height.
+  function fitBoard() {
+    const board = el('board');
+    if (!board || !cells.size) return;
+    const gap = parseFloat(getComputedStyle(board).gap) || 0;
+    const grid = Layout.chooseGrid(cells.size, board.clientWidth, board.clientHeight, gap);
+    board.style.setProperty('--cols', grid.cols);
+    board.style.setProperty('--rows', grid.rows);
+    board.style.setProperty('--cell-w', grid.cellW + 'px');
+    board.style.setProperty('--cell-h', grid.cellH + 'px');
+  }
+
   // Stable within a board mode, so the board rebuilds exactly twice per draw
   function signatureOf(state) {
     return boardMode(state) + ':' + boardTickets(state).length + ':' + state.tickets.length;
@@ -136,10 +149,12 @@ const Render = (function () {
   }
 
   function apply(state) {
-    if (builtFor !== signatureOf(state)) buildBoard(state);
+    const rebuilt = builtFor !== signatureOf(state);
+    if (rebuilt) buildBoard(state);
     paintOut(state);
     paintScoreboard(state);
     paintControls(state);
+    if (rebuilt) fitBoard();
   }
 
   function cellFor(number) { return cells.get(number); }
@@ -192,7 +207,7 @@ const Render = (function () {
   }
 
   return {
-    mount, apply, cellFor,
+    mount, apply, cellFor, fitBoard,
     showLoadSummary, showError, showStorageWarning, showResumePrompt
   };
 })();

@@ -1,27 +1,32 @@
+/* --cols and --rows are set by Render.fitBoard; 1fr tracks make the grid fill the box exactly */
 .board {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr));
+  grid-template-columns: repeat(var(--cols, 10), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 1), minmax(0, 1fr));
   gap: 6px;
   width: 100%;
-  flex: 1;
-  align-content: start;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
   padding: 4px;
 }
 
 .board:empty { display: none; }
 
+/* --cell-w and --cell-h come from Render.fitBoard, so the digits grow with the cells */
 .ticket {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border: 2px solid var(--brown);
   border-radius: 5px;
   background: var(--white);
   color: #000;
   font-family: 'Montserrat', Arial, sans-serif;
   font-weight: 800;
-  font-size: clamp(.75rem, 1.1vw, 1.15rem);
-  min-height: 2.6rem;
+  font-size: min(calc(var(--cell-h, 2.6rem) * 0.5), calc(var(--cell-w, 2.5rem) * 0.44));
+  line-height: 1;
   box-shadow: 1px 1px 3px rgba(0, 0, 0, .3);
   transition: background .3s, transform .3s;
 }
@@ -60,21 +65,24 @@
 }
 
 /* Final stage: fewer, bigger cells showing names. */
-.board--final { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 12px; }
+/* Columns and rows still come from --cols/--rows; only the gap and cell contents differ */
+.board--final { gap: 12px; }
 
-.board--final .ticket { flex-direction: column; min-height: 6rem; padding: 8px; }
+.board--final .ticket { flex-direction: column; justify-content: center; gap: .3em; padding: 6px; }
 
 .board--final .ticket-name {
   font-weight: bold;
   color: var(--brown);
-  font-size: clamp(1rem, 1.6vw, 1.6rem);
+  font-size: min(calc(var(--cell-h, 6rem) * 0.15), calc(var(--cell-w, 9rem) * 0.14));
   line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .board--final .ticket-number {
   font-weight: bold;
   color: #666;
-  font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+  font-size: min(calc(var(--cell-h, 6rem) * 0.28), calc(var(--cell-w, 9rem) * 0.24));
+  line-height: 1;
 }
 
 .board--final .ticket--out .ticket-name { color: var(--white); }
