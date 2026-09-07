@@ -65,8 +65,7 @@ test('an exact rectangle is taken only when it is nearly free', () => {
   assert.ok(Layout.EXACT_TOLERANCE > 0.5 && Layout.EXACT_TOLERANCE < 1);
 });
 
-// The screen is always filled exactly, because the columns and rows are 1fr.
-// This is about empty slots in the last row, which is the only raggedness possible.
+// 1fr tracks always fill the screen exactly; this is about empty slots in the last row
 test('no realistic ticket count leaves more than a few empty slots', () => {
   for (let n = 20; n <= 250; n++) {
     const g = grid(n);

@@ -67,8 +67,7 @@ const Render = (function () {
     builtFor = signatureOf(state);
   }
 
-  // Sizes the grid to the board box so the cells fill the screen at any ticket count.
-  // Must run after paintControls, which hides the upload message and so changes the box height.
+  // Fills the board box at any ticket count; must run after paintControls, which changes that box
   function fitBoard() {
     const board = el('board');
     if (!board || !cells.size) return;
