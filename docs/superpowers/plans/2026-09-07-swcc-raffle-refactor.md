@@ -349,7 +349,7 @@ Add to the returned object: `isAuctionTicket, hasAuctionTicket, remainingTickets
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 18 tests
+Expected: PASS, 18 tests in this file
 
 - [ ] **Step 5: Commit**
 
@@ -486,7 +486,7 @@ Add `nextPhase` to the returned object.
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 29 tests
+Expected: PASS, 29 tests in this file
 
 - [ ] **Step 5: Commit**
 
@@ -780,7 +780,7 @@ if (typeof module !== 'undefined') module.exports = Csv;
 - [ ] **Step 5: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 47 tests total across both files
+Expected: PASS, 21 tests in this file (2 added during review for the mid-field-quote and leading-whitespace defects)
 
 - [ ] **Step 6: Commit**
 
@@ -915,7 +915,7 @@ if (typeof module !== 'undefined') module.exports = Dismissals;
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 53 tests
+Expected: PASS, 6 tests in this file
 
 - [ ] **Step 5: Commit**
 
@@ -1371,7 +1371,7 @@ Note the `typeof require !== 'undefined' ? require(...) : Rules` pattern. In the
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 75 tests
+Expected: PASS, 15 tests in this file (1 added during review for the toJson throw path)
 
 - [ ] **Step 5: Commit**
 
@@ -1625,7 +1625,7 @@ if (typeof module !== 'undefined') module.exports = Persistence;
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `node --test`
-Expected: PASS, 89 tests
+Expected: PASS, 22 tests in this file; whole suite 93
 
 - [ ] **Step 5: Commit**
 
@@ -3005,7 +3005,25 @@ F5/Ctrl+R interception that prevented recovery (D2, R1)."
 - Delete: `app.js`, `style.css`
 - Create: `README.md`
 
-- [ ] **Step 1: Confirm nothing references the old files**
+- [ ] **Step 1: Fix the one remaining comment-style violation**
+
+`src/audio.js:19` reads `} catch (e) { /* ignore */ }`. The project rule is `//`-style comments only in JS. Change it to:
+
+```js
+    } catch (e) {
+      // Autoplay policy can reject playback; a silent draw beats a crash
+    }
+```
+
+Then confirm no `/*` remains in any JS file:
+
+```bash
+grep -n "/\*" src/*.js tests/*.js || echo "clean"
+```
+
+Expected: `clean`. CSS keeps its single-line `/* ... */` comments — that is the correct form there.
+
+- [ ] **Step 2: Confirm nothing references the old files**
 
 ```bash
 grep -rn "app\.js\|style\.css" index.html src/ styles/ || echo "clean"
@@ -3013,18 +3031,18 @@ grep -rn "app\.js\|style\.css" index.html src/ styles/ || echo "clean"
 
 Expected: `clean`
 
-- [ ] **Step 2: Delete them**
+- [ ] **Step 3: Delete them**
 
 ```bash
 git rm app.js style.css
 ```
 
-- [ ] **Step 3: Run the full unit suite**
+- [ ] **Step 4: Run the full unit suite**
 
 Run: `node --test`
-Expected: PASS, 89 tests, 0 failures
+Expected: PASS, 93 tests, 0 failures
 
-- [ ] **Step 4: Full browser verification (spec section 14)**
+- [ ] **Step 5: Full browser verification (spec section 14)**
 
 Work through every item and record the result:
 
@@ -3035,7 +3053,7 @@ Work through every item and record the result:
 5. **`localStorage` from a `file://` origin.** In the console on the `file://` page, run `Persistence.isAvailable()`. If it returns `false`, the storage warning banner must be visible and Export/Import must be the working fallback. Record which it was — this is the riskiest assumption in the design.
 6. Screenshots at 1920x1080, 1280x720 and 1366x768, at both 187 and 250 tickets. Confirm no clipping and no horizontal scrollbar.
 
-- [ ] **Step 5: Write `README.md`**
+- [ ] **Step 6: Write `README.md`**
 
 ```markdown
 # SWCC Reverse Raffle
@@ -3079,7 +3097,7 @@ node --test
 No install required; Node ships the test runner.
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add README.md app.js style.css
