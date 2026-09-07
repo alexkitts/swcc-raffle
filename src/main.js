@@ -98,8 +98,8 @@
       ? { x: aim.x + (Math.random() < 0.5 ? -1 : 1) * stumpsWidth * 0.85, y: aim.y }
       : aim;
 
-    // Just before impact: awaiting the flight put the thwack late, and audio adds its own latency
-    const contact = wide ? null : setTimeout(Sound.wicket, Math.max(0, ballMs - 80));
+    // Every ball lands on something, so every ball makes a noise; a wide only scuffs the pitch
+    const contact = setTimeout(wide ? Sound.scuff : Sound.wicket, Math.max(0, ballMs - 80));
 
     const landed = (await Animation.bowlAt(target, ballMs)) || { dx: 0, dy: 0 };
     if (Store.generation() !== startGen) { clearTimeout(contact); return; }
