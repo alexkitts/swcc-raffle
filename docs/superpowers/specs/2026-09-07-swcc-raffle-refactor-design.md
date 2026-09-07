@@ -102,6 +102,8 @@ tests/
   rules.test.js
   csv.test.js
   state.test.js
+  dismissals.test.js
+  persistence.test.js
   fixtures/last-year.csv            copy of template.csv, 187 rows, pinned
   fixtures/spreadsheet-quirks.csv   same data with BOM, CRLF, quoted comma, header
 ```
@@ -446,7 +448,7 @@ and why.
 
 ## 14. Testing
 
-`node --test tests/` — no install required.
+`node --test` — no install required.
 
 **`rules.test.js`**
 - `nextDrop` reaches exactly `finalStageAt` for every count 1-250 by dropSize

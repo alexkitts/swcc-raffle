@@ -19,8 +19,9 @@
 - **`finalStageAt` is 10 and is not exposed in the UI.** Only `dropSize` is operator-configurable.
 - **Drop size options are exactly `[5, 10, 20, 25, 50]`, default `10`.**
 - **All user-supplied text reaches the DOM via `textContent`, never `innerHTML`.** Ticket names come from an uploaded file.
+- **No block or paragraph comments anywhere. One line per comment, maximum** — `// like this`. This applies to JS, CSS and test files. Condense rather than delete: keep the useful information, fit it on one line. In CSS use a single-line `/* ... */`.
 - **No accessibility work.** No ARIA, no `aria-live`, no focus traps, no contrast auditing. Escape-to-close and input autofocus on the auction modal are kept as operator ergonomics, and `keydown` replaces the deprecated `onkeypress`, but nothing else.
-- **Test command is `node --test tests/`** run from the repo root.
+- **Test command is `node --test`** run from the repo root.
 - **Node's test runner discovers `tests/*.test.js`.** With no `package.json`, `.js` is CommonJS, so tests use `require`.
 
 ## Working state during this plan
@@ -79,8 +80,7 @@ test('nextDrop takes a full drop when already on a multiple', () => {
 });
 
 test('nextDrop never overshoots the final stage (the D1 regression)', () => {
-  // The old getEliminations took 20 here and landed on 5, skipping the auction.
-  // The new rule normalises 25 down to 20 first, so the path is 25 -> 20 -> 10.
+  // Old code took 20 here and landed on 5, skipping the auction; now 25 -> 20 -> 10
   assert.strictEqual(Rules.nextDrop(25, S(20)), 5);
   assert.strictEqual(Rules.nextDrop(20, S(20)), 10);   // clamped from 20 to the excess
   assert.strictEqual(Rules.nextDrop(27, S(20)), 7);    // 27 -> 20
@@ -128,7 +128,7 @@ test('the bulk drop never exceeds the eligible targets when ticket #1 is protect
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Cannot find module '../src/rules.js'`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -150,10 +150,7 @@ const Rules = (function () {
     interBallMs: 200
   });
 
-  // How many tickets this round knocks out.
-  //   - At or below the final stage, always one at a time.
-  //   - Otherwise drop to the nearest lower multiple of dropSize (R3),
-  //     clamped so we can never overshoot finalStageAt (D1).
+  // Drops to the nearest lower multiple of dropSize, clamped so we never overshoot finalStageAt
   function nextDrop(remaining, settings) {
     const dropSize = settings.dropSize;
     const finalStageAt = settings.finalStageAt;
@@ -177,7 +174,7 @@ if (typeof module !== 'undefined') module.exports = Rules;
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 7 tests
 
 - [ ] **Step 5: Commit**
@@ -306,7 +303,7 @@ test('ticket 1 survives a full simulated bulk stage from 250, 187 and 127', () =
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Rules.isAuctionTicket is not a function`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -327,8 +324,7 @@ In `src/rules.js`, add these functions inside the IIFE before the `return`:
     return state.tickets.filter(t => !out.has(t.number));
   }
 
-  // Who a ball may be aimed at. Ticket #1 is off limits until the final
-  // stage, which is what carries it through to the auction (R7).
+  // Ticket #1 is off limits until the final stage, which carries it through to the auction
   function eligibleTargets(state) {
     const protectOne = state.phase === 'bulk';
     return remainingTickets(state)
@@ -352,7 +348,7 @@ Add to the returned object: `isAuctionTicket, hasAuctionTicket, remainingTickets
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 18 tests
 
 - [ ] **Step 5: Commit**
@@ -458,7 +454,7 @@ test('a full run from 187 visits bulk, auction, final and won in order', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Rules.nextPhase is not a function`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -466,9 +462,7 @@ Expected: FAIL — `Rules.nextPhase is not a function`
 In `src/rules.js`, add inside the IIFE:
 
 ```js
-  // The only place a phase is decided. Evaluated at round boundaries and on
-  // load, never mid-round. Fixes D9, where the button and the winner banner
-  // each decided independently whether the game was over.
+  // The only place a phase is decided; evaluated at round boundaries and on load, never mid-round
   function nextPhase(current, remaining, opts) {
     if (current === 'awaiting-csv' && remaining === 0) return 'awaiting-csv';
     if (remaining <= 1) return 'won';
@@ -491,7 +485,7 @@ Add `nextPhase` to the returned object.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 29 tests
 
 - [ ] **Step 5: Commit**
@@ -690,7 +684,7 @@ test('a spreadsheet export with every quirk at once parses correctly', () => {
 
 - [ ] **Step 3: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Cannot find module '../src/csv.js'`
 
 - [ ] **Step 4: Write minimal implementation**
@@ -703,9 +697,7 @@ Create `src/csv.js`:
 const Csv = (function () {
   const MAX_TICKETS = 250;
 
-  // RFC 4180 field parser. Spreadsheets quote any field containing a comma
-  // and double up embedded quotes, which the original split(',') could not
-  // survive (D6).
+  // RFC 4180 parser: spreadsheets quote fields containing commas and double up embedded quotes
   function parseRows(text) {
     const rows = [];
     let row = [];
@@ -785,7 +777,7 @@ if (typeof module !== 'undefined') module.exports = Csv;
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 47 tests total across both files
 
 - [ ] **Step 6: Commit**
@@ -863,7 +855,7 @@ test('the pools are non-empty and immutable', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Cannot find module '../src/dismissals.js'`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -900,8 +892,7 @@ const Dismissals = (function () {
     'Stumped Off a Wide!'
   ]);
 
-  // Regular messages repeat freely. Final-stage messages are consumed so each
-  // is heard once, refilling only if the pool runs dry.
+  // Regular messages repeat freely; final-stage messages are consumed so each is heard once
   function pick(stage, used, rng) {
     const random = rng || Math.random;
     if (stage !== 'final') {
@@ -921,7 +912,7 @@ if (typeof module !== 'undefined') module.exports = Dismissals;
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 53 tests
 
 - [ ] **Step 5: Commit**
@@ -1199,7 +1190,7 @@ test('hydrate rejects junk', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Cannot find module '../src/state.js'`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -1377,7 +1368,7 @@ Note the `typeof require !== 'undefined' ? require(...) : Rules` pattern. In the
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 75 tests
 
 - [ ] **Step 5: Commit**
@@ -1400,7 +1391,7 @@ the banner disagreeing (D9)."
 - Create: `tests/persistence.test.js`
 
 **Interfaces:**
-- Consumes: `Store.SCHEMA_VERSION` (Task 6).
+- Consumes: nothing. This module is deliberately standalone — it serialises whatever object it is handed and never imports `Rules` or `Store`, which is what lets it be built and tested independently.
 - Produces:
   - `Persistence.KEY` → `'swcc-raffle:v1'`
   - `Persistence.isAvailable(storage?) -> boolean`
@@ -1535,7 +1526,7 @@ test('fromJson returns null for junk instead of throwing', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: FAIL — `Cannot find module '../src/persistence.js'`
 
 - [ ] **Step 3: Write minimal implementation**
@@ -1561,8 +1552,7 @@ const Persistence = (function () {
     return storage === undefined ? defaultStorage() : storage;
   }
 
-  // localStorage is not guaranteed on a file:// origin, which is how this app
-  // is run on the night. Probe for real rather than assuming.
+  // localStorage is not guaranteed on a file:// origin, so probe for real rather than assuming
   function isAvailable(storage) {
     const s = pick(storage);
     if (!s) return false;
@@ -1632,7 +1622,7 @@ if (typeof module !== 'undefined') module.exports = Persistence;
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 89 tests
 
 - [ ] **Step 5: Commit**
@@ -1907,8 +1897,7 @@ The grid is what makes any count to 250 reflow (D10, R2).
 
 .ticket--struck { transform: scale(1.2) rotate(15deg); }
 
-/* Ticket #1 is reserved for the auction and cannot be bowled out
-   until the final stage (R7). */
+/* Ticket #1 is reserved for the auction and cannot be bowled out until the final stage */
 .ticket--auction:not(.ticket--out) {
   background: linear-gradient(45deg, #fff, #fffacd);
   border-color: gold;
@@ -2267,8 +2256,7 @@ const Animation = (function () {
     if (el) el.style.transform = 'translateX(-50%)';
   }
 
-  // Resolves when the ball lands. Awaiting this is what makes overlapping
-  // balls impossible regardless of dropped frames or tab throttling (D3).
+  // Resolves when the ball lands; awaiting this makes overlapping balls impossible
   function throwBall(targetEl, ballMs) {
     const el = ball();
     if (!el || !targetEl) return Promise.resolve();
@@ -2307,8 +2295,7 @@ const Animation = (function () {
     setTimeout(() => targetEl.classList.remove('ticket--struck'), 200);
   }
 
-  // Only ever one popup. A new one replaces its predecessor, which is what
-  // stops the final stage stacking a pile of overlapping boxes (D4).
+  // Only ever one popup: a new one replaces its predecessor
   function showWicketPopup(number, dismissal, durationMs) {
     removePopup();
     const popup = document.createElement('div');
@@ -2437,8 +2424,16 @@ const Render = (function () {
       ? 'final' : 'bulk';
   }
 
-  // Cells are built once per board mode. Every later render only patches
-  // classes and text, so element identity survives for in-flight balls.
+  // The final board is the bulk-stage survivors, a set final-stage eliminations do not change
+  function boardTickets(state) {
+    if (boardMode(state) === 'bulk') return state.tickets;
+    const bulkOut = new Set(
+      state.eliminated.filter(e => e.stage === 'bulk').map(e => e.number)
+    );
+    return state.tickets.filter(t => !bulkOut.has(t.number));
+  }
+
+  // Built once per board mode; later renders only patch classes and text
   function buildBoard(state) {
     const board = el('board');
     const mode = boardMode(state);
@@ -2446,7 +2441,7 @@ const Render = (function () {
     cells.clear();
     board.classList.toggle('board--final', mode === 'final');
 
-    const tickets = mode === 'final' ? Store.remainingTickets() : state.tickets;
+    const tickets = boardTickets(state);
 
     tickets.forEach(ticket => {
       const cell = document.createElement('div');
@@ -2471,7 +2466,12 @@ const Render = (function () {
       cells.set(ticket.number, cell);
     });
 
-    builtFor = mode + ':' + tickets.length + ':' + state.tickets.length;
+    builtFor = signatureOf(state);
+  }
+
+  // Stable within a board mode, so the board rebuilds exactly twice per draw
+  function signatureOf(state) {
+    return boardMode(state) + ':' + boardTickets(state).length + ':' + state.tickets.length;
   }
 
   function paintOut(state) {
@@ -2538,12 +2538,7 @@ const Render = (function () {
   }
 
   function apply(state) {
-    const mode = boardMode(state);
-    const signature = mode + ':' +
-      (mode === 'final' ? Store.remainingTickets().length : state.tickets.length) + ':' +
-      state.tickets.length;
-
-    if (builtFor !== signature) buildBoard(state);
+    if (builtFor !== signatureOf(state)) buildBoard(state);
     paintOut(state);
     paintScoreboard(state);
     paintControls(state);
@@ -2736,8 +2731,7 @@ const Auction = (function () {
       Store.skipAuction();
     });
 
-    // keydown, not the deprecated onkeypress (D11). Escape skips the auction,
-    // which is the operator ergonomics the spec kept from the dropped a11y work.
+    // keydown, not the deprecated onkeypress; Escape skips the auction
     function onKeydown(event) {
       if (event.key === 'Enter') { event.preventDefault(); confirm.click(); }
       if (event.key === 'Escape') { event.preventDefault(); cancel.click(); }
@@ -2932,8 +2926,7 @@ both on keydown rather than the deprecated onkeypress (D11)."
       });
     });
 
-    // A native confirm does work, unlike the F5/Ctrl+R interception it
-    // replaces (D2). Recovery, not prevention, is the real answer.
+    // A native confirm works, unlike the F5/Ctrl+R interception it replaces
     window.addEventListener('beforeunload', (event) => {
       const state = Store.get();
       if (state.tickets.length && state.phase !== 'won') {
@@ -3020,7 +3013,7 @@ git rm app.js style.css
 
 - [ ] **Step 3: Run the full unit suite**
 
-Run: `node --test tests/`
+Run: `node --test`
 Expected: PASS, 89 tests, 0 failures
 
 - [ ] **Step 4: Full browser verification (spec section 14)**
@@ -3072,7 +3065,7 @@ save a file by hand, and **Import progress** to restore it.
 ## Tests
 
 ```
-node --test tests/
+node --test
 ```
 
 No install required; Node ships the test runner.
