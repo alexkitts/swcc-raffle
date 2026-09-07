@@ -18,7 +18,7 @@ const Csv = (function () {
         inQuotes = false;
         continue;
       }
-      if (ch === '"') { inQuotes = true; continue; }
+      if (ch === '"' && field === '') { inQuotes = true; continue; }
       if (ch === ',') { row.push(field); field = ''; continue; }
       if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; continue; }
       field += ch;
@@ -37,7 +37,7 @@ const Csv = (function () {
       .map(cells => cells.map(cell => cell.trim()))
       .filter(cells => cells.some(cell => cell !== ''));
 
-    if (rows.length && /name/i.test(rows[0][0] || '')) rows = rows.slice(1);
+    if (rows.length && !/^\d+$/.test(rows[0][1] || '')) rows = rows.slice(1);
 
     const tickets = [];
     const warnings = [];

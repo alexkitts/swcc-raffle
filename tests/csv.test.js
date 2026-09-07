@@ -37,6 +37,18 @@ test('handles escaped double quotes inside a quoted field', () => {
   assert.strictEqual(r.tickets[0].name, 'He said "nice shot"');
 });
 
+test('handles a mid-field unescaped quote as a literal character, not a quote toggle', () => {
+  const r = Csv.parse('A,1\nO"Brien,7\nC,6\n');
+  assert.deepStrictEqual(r.tickets.map(t => t.name), ['A', 'O"Brien', 'C']);
+  assert.deepStrictEqual(r.tickets.map(t => t.number), [1, 7, 6]);
+});
+
+test('keeps a first row whose name contains "name" when its number cell is numeric', () => {
+  const r = Csv.parse('Nameless Joe,5\nB,6\n');
+  assert.strictEqual(r.tickets.length, 2);
+  assert.strictEqual(r.tickets[0].name, 'Nameless Joe');
+});
+
 test('skips a header row when present', () => {
   const r = Csv.parse('Name,Number\nKyle Mitchell,2\n');
   assert.strictEqual(r.tickets.length, 1);
