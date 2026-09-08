@@ -4,8 +4,8 @@ const Suspense = (function () {
   // One delivery's own animation; the gap between deliveries is the operator's next click
   const DELIVERY_MS = 1900;
 
-  // The wicket always falls on one of these balls, so a round runs a predictable length
-  const MIN_KILL_BALL = 6;
+  // The wicket falls on one of these balls, rolled fresh each round: a predictable length, unpredictable ball
+  const MIN_KILL_BALL = 4;
   const MAX_KILL_BALL = 8;
 
   function drawOrder(numbers, rng) {

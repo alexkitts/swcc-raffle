@@ -40,23 +40,39 @@ test('an empty field yields no plan rather than throwing', () => {
 });
 
 // A fixed-length round is the whole point: the stage has to fit the evening
-test('every round is six, seven or eight balls, at every field size', () => {
+test('every round is four to eight balls, at every field size', () => {
   for (let n = 2; n <= 10; n++) {
     for (let seed = 0; seed < 60; seed++) {
       const plan = Suspense.planRound(tickets(n), { rng: seeded(seed) });
-      assert.ok(plan.steps.length >= 6 && plan.steps.length <= 8,
+      assert.ok(plan.steps.length >= 4 && plan.steps.length <= 8,
         n + ' remaining, seed ' + seed + ': ' + plan.steps.length + ' balls');
       assert.strictEqual(plan.steps.length, plan.killBall);
     }
   }
 });
 
-test('all three round lengths actually occur', () => {
+// Five faces on the die, so ten rounds are far less likely to repeat a rhythm
+test('all five round lengths actually occur', () => {
   const seen = new Set();
-  for (let seed = 0; seed < 200; seed++) {
+  for (let seed = 0; seed < 400; seed++) {
     seen.add(Suspense.planRound(tickets(7), { rng: seeded(seed) }).killBall);
   }
-  assert.deepStrictEqual([...seen].sort(), [6, 7, 8]);
+  assert.deepStrictEqual([...seen].sort(), [4, 5, 6, 7, 8]);
+});
+
+test('the die is even across its five faces', () => {
+  const counts = new Map([4, 5, 6, 7, 8].map(k => [k, 0]));
+  const rolls = 20000;
+  for (let i = 0; i < rolls; i++) {
+    const k = Suspense.planRound(tickets(6), { rng: Math.random }).killBall;
+    counts.set(k, counts.get(k) + 1);
+  }
+  const expected = rolls / 5;
+  for (const [ball, got] of counts) {
+    const drift = Math.abs(got - expected) / expected;
+    assert.ok(drift < 0.1,
+      'ball ' + ball + ' came up ' + got + ' times, expected about ' + expected);
+  }
 });
 
 test('only the last ball is the wicket', () => {
@@ -110,16 +126,16 @@ test('two left alternate ball for ball', () => {
         'the same player faced two in a row at ball ' + (i + 1));
     });
     const faced = plan.steps.filter(s => s.number === 4).length;
-    assert.ok(faced >= 3 && faced <= 4, 'one of two players faced ' + faced + ' balls');
+    assert.ok(faced >= 2 && faced <= 4, 'one of two players faced ' + faced + ' balls');
   }
 });
 
-test('three left get two or three goes each', () => {
+test('three left share the balls out, one to three each', () => {
   for (let seed = 0; seed < 30; seed++) {
     const plan = Suspense.planRound([1, 2, 3], { rng: seeded(seed) });
     for (const n of [1, 2, 3]) {
       const faced = plan.steps.filter(s => s.number === n).length;
-      assert.ok(faced >= 2 && faced <= 3, '#' + n + ' faced ' + faced + ' balls');
+      assert.ok(faced >= 1 && faced <= 3, '#' + n + ' faced ' + faced + ' balls');
     }
   }
 });

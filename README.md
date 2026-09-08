@@ -61,8 +61,8 @@ and this stage is bowled by hand so you can narrate it. The button becomes
 **Bowl Next Ball** and each click bowls exactly one delivery, so you set
 the pace and can talk between balls.
 
-Each wicket takes 6, 7 or 8 balls, drawn at random, so a round lasts a
-predictable length without being predictable. The batting order is also
+Each wicket takes anywhere from 4 to 8 balls, rolled fresh each time like a
+die, so a round lasts a predictable length without being predictable. The batting order is also
 reshuffled before every wicket, so being safe last time means nothing.
 With two players left they simply alternate.
 
