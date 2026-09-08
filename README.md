@@ -30,18 +30,23 @@ When you're ready, click **Upload CSV** and choose your finished file.
 
 ## Running the draw
 
-Use the **Knock out per ball** dropdown to choose how many tickets go out
-each time you click **Bowl Ball**: 5, 10, 20, 25 or 50. The default is 10.
+Use the **Knock out in steps of** dropdown to choose the size of each
+step: 1, 5, 10, 20, 25 or 50. The default is 10.
 
-- The very first click brings the ticket count down to a round multiple of
-  whatever number you picked (for example, 187 tickets at a drop size of 10
-  becomes 180 — a first knockout of 7).
-- After that, each click knocks out exactly that many, until 10 tickets
-  remain.
+This is a step size, not always the number that goes out next. The first
+click squares the field up to a round multiple of the step, so it is often
+a smaller number:
 
-Click **Bowl Ball** to fire the ball. Wait for the animation to finish
-before clicking again — the button disables itself mid-throw so you can't
-double-click by accident.
+- 187 tickets in steps of 10 knocks out 7 first, leaving 180.
+- 130 tickets in steps of 20 knocks out 10 first, leaving 120.
+- After that, each click knocks out a full step, until 10 tickets remain.
+
+You never have to work this out yourself. The button always names the real
+number — **Bowl Ball (Next: 7 out)** — and whenever it differs from the
+step size, a note beside it spells out where the field is heading.
+
+Wait for the animation to finish before clicking again; the button
+disables itself mid-throw so you cannot double-click by accident.
 
 ## The auction
 
@@ -51,9 +56,17 @@ confirm, or press **Escape** to skip the auction and move straight on.
 
 ## The final 10
 
-Once the auction is done (or skipped), the last 10 tickets go out one at a
-time — click **Bowl Ball** once per ticket — until a single winner remains,
-who is shown on screen.
+Once the auction is done (or skipped), the last 10 go out one at a time,
+and this stage is bowled by hand so you can narrate it. The button becomes
+**Bowl Next Ball** and each click bowls exactly one delivery, so you set
+the pace and can talk between balls.
+
+Each wicket takes 6, 7 or 8 balls, drawn at random, so a round lasts a
+predictable length without being predictable. The batting order is also
+reshuffled before every wicket, so being safe last time means nothing.
+With two players left they simply alternate.
+
+Keep clicking until one ticket remains; the winner is shown on screen.
 
 ## If something goes wrong: recovery
 

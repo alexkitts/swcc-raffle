@@ -141,7 +141,12 @@ const Render = (function () {
     const throwBtn = el('throw');
     const select = el('drop-size');
     const midRound = state.round !== null;
-    const bowlable = (state.phase === 'bulk' || state.phase === 'final') && !midRound;
+    const inFlight = !!(state.round && state.round.inFlight);
+
+    // The bulk stage bowls a whole round per click; the final stage is one ball per click
+    let bowlable = false;
+    if (state.phase === 'bulk') bowlable = !midRound;
+    else if (state.phase === 'final') bowlable = !inFlight;
 
     throwBtn.disabled = !bowlable;
     select.value = String(state.settings.dropSize);
@@ -150,11 +155,26 @@ const Render = (function () {
     if (state.phase === 'won') throwBtn.textContent = '\u{1F3C6} WINNER FOUND! \u{1F3C6}';
     else if (state.phase === 'awaiting-csv') throwBtn.textContent = 'Bowl Ball';
     else if (state.phase === 'auction') throwBtn.textContent = 'Auction in progress';
+    else if (state.phase === 'final') throwBtn.textContent = '🎯 Bowl Next Ball';
     else throwBtn.textContent = 'Bowl Ball (Next: ' + Store.nextDrop() + ' out)';
+
+    paintDropHint(state);
 
     el('crease').hidden = state.phase !== 'final';
     el('upload-message').hidden = state.phase !== 'awaiting-csv';
     el('reset-btn').hidden = state.phase === 'awaiting-csv';
+  }
+
+  // The dropdown is a step size, not the next drop, so spell out the difference when there is one
+  function paintDropHint(state) {
+    const hint = el('drop-hint');
+    if (state.phase !== 'bulk') { hint.hidden = true; return; }
+
+    const out = Store.nextDrop();
+    if (out === state.settings.dropSize) { hint.hidden = true; return; }
+
+    hint.hidden = false;
+    hint.textContent = 'next round takes out ' + out + ', down to ' + (Store.remaining() - out);
   }
 
   function apply(state) {

@@ -8,6 +8,9 @@
   let bowling = false;
   let persistArmed = false;
 
+  // The final stage is bowled by hand, so its plan has to outlive each click
+  let finalRound = null;
+
   // ---- persistence wiring ----
 
   function persist() {
@@ -41,30 +44,40 @@
     }
   }
 
-  // The victim is already chosen fairly; this is the theatre laid over that decision
-  async function bowlSuspense(victim, startGen) {
-    const alive = new Set(Store.remainingTickets().map(t => t.number));
-    const order = Store.get().finalOrder.filter(n => alive.has(n));
-    const plan = Suspense.planSteps(order, Store.get().spotlight, victim);
+  // One click, one ball, so the operator can narrate the final stage at their own pace
+  async function bowlFinalDelivery() {
+    const startGen = Store.generation();
 
-    if (!plan.length) {
-      Store.eliminate(victim);
-      announceWicket(10000);
-      return;
+    if (!finalRound) {
+      const plan = Suspense.planRound(Rules.eligibleTargets(Store.get()));
+      if (!plan) return;
+      finalRound = { steps: plan.steps, index: 0, victim: plan.victim };
+      Store.beginRound([plan.victim]);
+      Animation.resetStumps();
     }
 
-    Animation.resetStumps();
+    const step = finalRound.steps[finalRound.index];
+    const victim = finalRound.victim;
+    finalRound.index++;
 
-    for (const step of plan) {
-      if (Store.generation() !== startGen) return;
+    bowling = true;
+    Store.setDeliveryInFlight(true);
+    try {
       await bowlDelivery(step, victim, startGen);
-      if (Store.generation() !== startGen) return;
+    } finally {
+      bowling = false;
+      if (Store.generation() === startGen) Store.setDeliveryInFlight(false);
     }
 
-    Store.setSpotlight(Suspense.litAfterKill(order, victim));
+    if (Store.generation() !== startGen) { finalRound = null; return; }
+    if (!step.kill) return;
+
+    finalRound = null;
+    Store.endRound();
 
     // Let the scatter land, then stand the wicket back up ready for the next round
     setTimeout(Animation.resetStumps, 2500);
+    afterRound(startGen);
   }
 
   // One delivery: the card becomes the bail, the ball is bowled, and the wicket either falls or does not
@@ -133,10 +146,18 @@
     if (entry) Animation.showWicketPopup(entry.number, entry.dismissal, durationMs);
   }
 
+  function afterRound(startGen) {
+    if (Store.generation() !== startGen) return;
+    const after = Store.get();
+    if (after.phase === 'auction') setTimeout(showAuction, 1000);
+    if (after.phase === 'won') showWinner();
+  }
+
   async function bowlRound() {
     if (bowling) return;
     const state = Store.get();
-    if (state.phase !== 'bulk' && state.phase !== 'final') return;
+    if (state.phase === 'final') { await bowlFinalDelivery(); return; }
+    if (state.phase !== 'bulk') return;
 
     const drop = Store.nextDrop();
     const targets = Rules.pickTargets(Rules.eligibleTargets(state), drop);
@@ -147,20 +168,11 @@
     Store.beginRound(targets);
 
     try {
-      if (state.phase === 'final') {
-        await bowlSuspense(targets[0], startGen);
-      } else {
-        await bowlBulk(targets, startGen);
-      }
+      await bowlBulk(targets, startGen);
     } finally {
       if (Store.generation() === startGen) Store.endRound();
       bowling = false;
-
-      if (Store.generation() === startGen) {
-        const after = Store.get();
-        if (after.phase === 'auction') setTimeout(showAuction, 1000);
-        if (after.phase === 'won') showWinner();
-      }
+      afterRound(startGen);
     }
   }
 
@@ -270,16 +282,9 @@
     el('reset-btn').disabled = disabled;
   }
 
-  // Drawn once per final stage, whichever route got us there: a round, the auction, or a resume
-  function ensureFinalOrder(state) {
-    if (state.phase !== 'final' || state.finalOrder.length) return;
-    Store.setFinalOrder(Suspense.drawOrder(Store.remainingTickets().map(t => t.number)));
-  }
-
   function boot() {
     Render.mount();
     wireControls();
-    Store.subscribe(ensureFinalOrder);
     Store.subscribe(Render.apply);
     Store.subscribe(persist);
 

@@ -21,7 +21,6 @@ const Store = (function () {
       usedFinalDismissals: [],
       auctionResolved: false,
       loadSummary: null,
-      finalOrder: [],
       spotlight: null
     };
   }
@@ -89,7 +88,7 @@ const Store = (function () {
   }
 
   function beginRound(targets) {
-    state.round = { targets: targets.slice(), thrown: 0 };
+    state.round = { targets: targets.slice(), thrown: 0, inFlight: false };
     emit();
   }
 
@@ -114,9 +113,10 @@ const Store = (function () {
     emit();
   }
 
-  // The drawn order the final-stage spotlight walks; set once, so a reload does not reshuffle
-  function setFinalOrder(order) {
-    state.finalOrder = order.slice();
+  // The Bowl button stays live between hand-bowled deliveries, but never during one
+  function setDeliveryInFlight(inFlight) {
+    if (!state.round) return;
+    state.round.inFlight = !!inFlight;
     emit();
   }
 
@@ -165,7 +165,6 @@ const Store = (function () {
       usedFinalDismissals: (saved.usedFinalDismissals || []).slice(),
       auctionResolved: !!saved.auctionResolved,
       loadSummary: saved.loadSummary || null,
-      finalOrder: (saved.finalOrder || []).slice(),
       spotlight: typeof saved.spotlight === 'number' ? saved.spotlight : null
     };
     gen++;
@@ -178,7 +177,7 @@ const Store = (function () {
     SCHEMA_VERSION,
     get, generation, subscribe, reset,
     loadTickets, setDropSize,
-    beginRound, eliminate, endRound, setFinalOrder, setSpotlight,
+    beginRound, eliminate, endRound, setDeliveryInFlight, setSpotlight,
     resolveAuction, skipAuction, hydrate,
     remaining, remainingTickets, wicketsThisStage, stageTotal, nextDrop, winner
   };

@@ -1,11 +1,12 @@
 'use strict';
 
 const Suspense = (function () {
-  const BASE_STEP_MS = 1900;
+  // One delivery's own animation; the gap between deliveries is the operator's next click
+  const DELIVERY_MS = 1900;
 
-  // How many deliveries a wicket takes, drawn at random so the count is never predictable
-  const MIN_DELIVERIES = 15;
-  const MAX_DELIVERIES = 25;
+  // The wicket always falls on one of these balls, so a round runs a predictable length
+  const MIN_KILL_BALL = 6;
+  const MAX_KILL_BALL = 8;
 
   function drawOrder(numbers, rng) {
     const random = rng || Math.random;
@@ -19,55 +20,38 @@ const Suspense = (function () {
     return out;
   }
 
-  // Whole laps plus the offset to the victim, which is what keeps deliveries faced equal to within one
-  function planSteps(order, litNumber, victim, opts) {
-    const n = order.length;
-    if (!n) return [];
-
-    const victimIndex = order.indexOf(victim);
-    if (victimIndex === -1) return [];
+  // Both the order and the ball that ends it are drawn fresh, so neither carries over between rounds
+  function planRound(numbers, opts) {
+    if (!numbers || !numbers.length) return null;
 
     const settings = opts || {};
     const random = settings.rng || Math.random;
-    const stepMs = settings.stepMs > 0 ? settings.stepMs : BASE_STEP_MS;
-    const minDeliveries = settings.minDeliveries > 0 ? settings.minDeliveries : MIN_DELIVERIES;
-    const maxDeliveries = settings.maxDeliveries > 0 ? settings.maxDeliveries : MAX_DELIVERIES;
+    const minBall = settings.minKillBall > 0 ? settings.minKillBall : MIN_KILL_BALL;
+    const maxBall = settings.maxKillBall >= minBall ? settings.maxKillBall : MAX_KILL_BALL;
+    const span = Math.max(1, maxBall - minBall + 1);
 
-    const litIndex = order.indexOf(litNumber);
-    const offset = ((victimIndex - litIndex - 1 + n * 2) % n) + 1;
+    const order = drawOrder(numbers, random);
+    const killBall = minBall + Math.floor(random() * span);
 
-    // Only totals that both land on the victim and cover whole laps are valid
-    const candidates = [];
-    for (let laps = 1; offset + laps * n <= maxDeliveries; laps++) {
-      const total = offset + laps * n;
-      if (total >= minDeliveries) candidates.push(total);
-    }
-
-    const total = candidates.length
-      ? candidates[Math.floor(random() * candidates.length)]
-      : offset + n;
-
-    // Every step is timed identically: a slower run-in would announce the wicket before it lands
+    // The walk repeats the order until the chosen ball, which is the one that takes the wicket
     const steps = [];
-    for (let i = 0; i < total; i++) {
+    for (let i = 0; i < killBall; i++) {
       steps.push({
-        number: order[(litIndex + 1 + i) % n],
-        ms: Math.round(stepMs),
-        kill: i === total - 1
+        number: order[i % order.length],
+        ms: DELIVERY_MS,
+        kill: i === killBall - 1
       });
     }
-    return steps;
+
+    return {
+      order: order,
+      killBall: killBall,
+      victim: steps[steps.length - 1].number,
+      steps: steps
+    };
   }
 
-  // The victim leaves the order, so the walk resumes from the survivor before them
-  function litAfterKill(order, victim) {
-    const n = order.length;
-    const i = order.indexOf(victim);
-    if (!n || i === -1) return null;
-    return order[(i - 1 + n) % n];
-  }
-
-  return { BASE_STEP_MS, MIN_DELIVERIES, MAX_DELIVERIES, drawOrder, planSteps, litAfterKill };
+  return { DELIVERY_MS, MIN_KILL_BALL, MAX_KILL_BALL, drawOrder, planRound };
 })();
 
 if (typeof module !== 'undefined') module.exports = Suspense;

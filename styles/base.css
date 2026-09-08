@@ -63,6 +63,7 @@ h1 {
 
 .bowl-row { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
 .bowl-row label { color: var(--gold); font-size: .95rem; }
+.drop-hint { color: var(--gold); font-size: .9rem; opacity: .8; font-style: italic; }
 
 button, .btn, select {
   background: var(--brown);
