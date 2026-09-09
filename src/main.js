@@ -95,8 +95,14 @@
     if (Store.generation() !== startGen) return;
 
     // The name stands at the crease while the room looks at it and the operator talks
-    await delay(timing.holdMs);
-    if (Store.generation() !== startGen) return;
+    const runUp = Math.min(timing.holdMs, Suspense.BOWLER_RELEASE_MS);
+    await delay(timing.holdMs - runUp);
+    if (Store.generation() !== startGen) { Animation.resetBowler(); return; }
+
+    // Started so his arm comes over at the moment the ball is bowled
+    Animation.runBowler();
+    await delay(runUp);
+    if (Store.generation() !== startGen) { Animation.resetBowler(); return; }
 
     const aim = Animation.stumpTarget(stumps);
     const outcome = step.kill ? null : Dismissals.pickSurvival();

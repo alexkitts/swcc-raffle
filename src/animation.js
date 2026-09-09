@@ -9,13 +9,21 @@ const Animation = (function () {
 
   function resetBall() {
     const el = ball();
-    if (el) el.style.transform = 'translateX(-50%)';
+    if (!el) return;
+    el.style.transform = 'translateX(-50%)';
+    el.classList.remove('ball--live');
+  }
+
+  function showBall() {
+    const el = ball();
+    if (el) el.classList.add('ball--live');
   }
 
   // Resolves when the ball lands; awaiting this makes overlapping balls impossible
   function throwBall(targetEl, ballMs) {
     const el = ball();
     if (!el || !targetEl) return Promise.resolve();
+    showBall();
 
     const rect = targetEl.getBoundingClientRect();
     const cx = window.innerWidth / 2;
@@ -114,6 +122,7 @@ const Animation = (function () {
   function bowlAt(point, ms) {
     const el = ball();
     if (!el || !point) return Promise.resolve();
+    showBall();
 
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight - 40;
@@ -251,6 +260,33 @@ const Animation = (function () {
     if (stumps) stumps.classList.remove('stumps--hit');
   }
 
+  // Purely decorative, so a clip that will not play must never hold up a delivery
+  function runBowler() {
+    const video = document.getElementById('bowler');
+    if (!video) return;
+    video.classList.add('bowler--live');
+    video.addEventListener('ended', () => video.classList.remove('bowler--live'), { once: true });
+    try {
+      video.currentTime = 0;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    } catch (e) {
+      // An unplayable clip is a missing flourish, not a broken draw
+    }
+  }
+
+  function resetBowler() {
+    const video = document.getElementById('bowler');
+    if (!video) return;
+    video.classList.remove('bowler--live');
+    try {
+      video.pause();
+      video.currentTime = 0;
+    } catch (e) {
+      // Nothing to do; the class is already off
+    }
+  }
+
   function showOutcome(text, ms) {
     const host = overlays();
     if (!host) return;
@@ -264,6 +300,8 @@ const Animation = (function () {
 
   function clearOverlays() {
     removePopup();
+    resetBall();
+    resetBowler();
     const host = overlays();
     while (host && host.firstChild) host.removeChild(host.firstChild);
   }
@@ -272,6 +310,7 @@ const Animation = (function () {
     throwBall, strike, resetBall, clearOverlays,
     bowlAt, ballAway, presentToBail, returnFromBail, bailBowled,
     swingBat, hitStumps, resetStumps, showOutcome, centreOf,
+    runBowler, resetBowler,
     showWicketPopup, showWinnerBanner, stumpTarget
   };
 })();

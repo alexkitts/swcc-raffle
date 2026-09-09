@@ -152,7 +152,7 @@
 /* The bat swings in for any delivery the batsman connects with */
 .bat {
   position: fixed;
-  width: clamp(56px, 5vw, 96px);
+  width: clamp(44px, 3.9vw, 76px);
   aspect-ratio: 1 / 3;
   transform-origin: 50% 8%;
   background:

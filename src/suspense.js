@@ -2,9 +2,12 @@
 
 const Suspense = (function () {
   // Each phase of a hand-bowled delivery, in order; the gap between deliveries is the operator's next click
+  // Measured in the browser: the arm is at full stretch from 2.124s to 2.207s, so aim mid-window
+  const BOWLER_RELEASE_MS = 2165;
+
   const TIMING = Object.freeze({
     presentMs: 2000,
-    holdMs: 3000,
+    holdMs: 2500,
     ballMs: 650,
     dwellMs: 900,
     returnMs: 180
@@ -56,7 +59,7 @@ const Suspense = (function () {
     };
   }
 
-  return { TIMING, MIN_KILL_BALL, MAX_KILL_BALL, drawOrder, planRound };
+  return { TIMING, BOWLER_RELEASE_MS, MIN_KILL_BALL, MAX_KILL_BALL, drawOrder, planRound };
 })();
 
 if (typeof module !== 'undefined') module.exports = Suspense;

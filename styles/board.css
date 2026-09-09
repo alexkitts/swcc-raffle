@@ -49,12 +49,30 @@
   min-height: 0;
 }
 
+/* Static on purpose: the bowler grows within his own frame, so it reads as the camera closing in */
+.bowler {
+  position: absolute;
+  left: var(--bowler-x, 57%);
+  bottom: var(--bowler-y, -24vh);
+  height: var(--bowler-h, 66vh);
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.bowler--live { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bowler { display: none; }
+}
+
 /* Three separate elements so each stump can be knocked its own way */
+/* Up and left of centre, which leaves the right of the crease to the bowler */
 .stumps {
   position: absolute;
-  left: 50%;
-  bottom: 6%;
-  height: 82%;
+  left: var(--stumps-x, 40%);
+  bottom: var(--stumps-y, 22%);
+  height: var(--stumps-h, 60%);
   aspect-ratio: 3 / 4;
   transform: translateX(-50%);
   display: flex;
@@ -63,22 +81,44 @@
   padding: 0 4%;
 }
 
+/* Scuffed ground at the base, which sits the wicket on the pitch instead of floating on it */
+.stumps::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9%;
+  width: 215%;
+  height: 26%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%,
+    rgba(74, 48, 24, .82) 0%, rgba(92, 62, 34, .66) 30%,
+    rgba(112, 80, 48, .38) 58%, rgba(120, 90, 60, 0) 78%);
+  z-index: 0;
+}
+
 .stump {
-  width: 15%;
-  height: 90%;
+  position: relative;
+  z-index: 1;
   border-radius: 999px;
   background: linear-gradient(90deg, #d9c69a 0%, #efe2bd 38%, #fdf6e2 55%, #cbb587 100%);
   box-shadow: 0 6px 10px rgba(0, 0, 0, .45);
   transform-origin: 50% 100%;
 }
 
+/* Tall to short, left to right, kept subtle: just enough angle to sit the wicket in the ground */
+.stump:nth-child(1) { width: 15.6%; height: 100%; bottom: 0; }
+.stump:nth-child(2) { width: 15%; height: 97.5%; bottom: 1.5%; }
+.stump:nth-child(3) { width: 14.4%; height: 95%; bottom: 3%; }
+
 /* Where a presented card comes to rest as the bail, straddling the stumps */
+/* Percentages of a smaller wicket, raised so the presented name stays the same size on screen */
 .bail-slot {
   position: absolute;
   left: 50%;
-  top: 1%;
-  width: 128%;
-  height: 19%;
+  top: -3%;
+  width: 150%;
+  height: 22%;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -172,8 +212,10 @@
 .board--final .ticket--out .ticket-name { color: var(--white); }
 .board--final .ticket--out .ticket-number { color: var(--gold-dark); }
 
+/* Hidden until a ball is actually in flight, so nothing sits on the pitch between deliveries */
 .ball {
   position: fixed;
+  opacity: 0;
   bottom: 20px;
   left: 50%;
   width: 30px;
@@ -184,3 +226,5 @@
   pointer-events: none;
   z-index: 5;
 }
+
+.ball--live { opacity: 1; }
