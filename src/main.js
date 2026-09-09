@@ -121,7 +121,7 @@
     // Every ball lands on something, so every ball makes a noise; a wide only scuffs the pitch
     const contact = setTimeout(wide ? Sound.scuff : Sound.wicket, Math.max(0, timing.ballMs - 80));
 
-    const landed = (await Animation.bowlAt(target, timing.ballMs)) || { dx: 0, dy: 0 };
+    const landed = (await Animation.bowlAt(target, timing.ballMs, Animation.bowlerHand())) || { dx: 0, dy: 0 };
     if (Store.generation() !== startGen) { clearTimeout(contact); return; }
 
     if (step.kill) {

@@ -119,23 +119,41 @@ const Animation = (function () {
   };
 
   // Arcs the ball to a point rather than an element, so a wide can miss on purpose
-  function bowlAt(point, ms) {
+  // Measured off the clip: at release his hand is 71.4% across and 5.7% down the frame
+  const BOWLER_HAND = Object.freeze({ x: 0.714, y: 0.057 });
+
+  function bowlerHand() {
+    const video = document.getElementById('bowler');
+    if (!video) return null;
+    const r = video.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    return { x: r.left + BOWLER_HAND.x * r.width, y: r.top + BOWLER_HAND.y * r.height };
+  }
+
+  // Leaves the bowler's hand when we know where it is, and the bottom of the screen otherwise
+  function bowlAt(point, ms, from) {
     const el = ball();
     if (!el || !point) return Promise.resolve();
     showBall();
 
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight - 40;
+    const sx = from ? from.x - cx : 0;
+    const sy = from ? from.y - cy : 0;
     const dx = point.x - cx;
     const dy = point.y - cy;
-    const arc = Math.min(220, Math.sqrt(dx * dx + dy * dy) * 0.32);
+    const span = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy) * (dy - sy));
+    // Lofted when thrown up from the screen edge, but a release above the stumps sags instead
+    const rising = sy > dy;
+    const arc = Math.min(220, span * 0.32) * (rising ? 1 : -0.18);
     const at = (f, lift, scale) => ({
-      transform: 'translateX(-50%) translate(' + (dx * f) + 'px, ' + ((dy * f) - (arc * lift)) + 'px) scale(' + scale + ')',
+      transform: 'translateX(-50%) translate(' + (sx + (dx - sx) * f) + 'px, ' +
+        ((sy + (dy - sy) * f) - (arc * lift)) + 'px) scale(' + scale + ')',
       offset: f
     });
 
     const animation = el.animate([
-      { transform: 'translateX(-50%) translate(0px, 0px) scale(1)', offset: 0 },
+      at(0, 0, 1),
       at(0.25, 0.7, 0.88),
       at(0.55, 1, 0.66),
       at(0.8, 0.7, 0.5),
@@ -310,7 +328,7 @@ const Animation = (function () {
     throwBall, strike, resetBall, clearOverlays,
     bowlAt, ballAway, presentToBail, returnFromBail, bailBowled,
     swingBat, hitStumps, resetStumps, showOutcome, centreOf,
-    runBowler, resetBowler,
+    runBowler, resetBowler, bowlerHand,
     showWicketPopup, showWinnerBanner, stumpTarget
   };
 })();
