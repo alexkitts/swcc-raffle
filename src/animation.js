@@ -143,9 +143,8 @@ const Animation = (function () {
     const dx = point.x - cx;
     const dy = point.y - cy;
     const span = Math.sqrt((dx - sx) * (dx - sx) + (dy - sy) * (dy - sy));
-    // Lofted when thrown up from the screen edge, but a release above the stumps sags instead
-    const rising = sy > dy;
-    const arc = Math.min(220, span * 0.32) * (rising ? 1 : -0.18);
+    // Lofted whichever way the ball is going, because the loop over the pitch is the nice part
+    const arc = Math.min(220, span * 0.32);
     const at = (f, lift, scale) => ({
       transform: 'translateX(-50%) translate(' + (sx + (dx - sx) * f) + 'px, ' +
         ((sy + (dy - sy) * f) - (arc * lift)) + 'px) scale(' + scale + ')',
