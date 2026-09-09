@@ -188,8 +188,9 @@ const Animation = (function () {
 
     cell.classList.add('ticket--away');
 
+    // A gentle ease both ends, so a long present glides rather than darting then crawling
     const animation = clone.animate(boxFrames(start, end), {
-      duration: ms, easing: 'cubic-bezier(.3,.9,.3,1)', fill: 'forwards'
+      duration: ms, easing: 'cubic-bezier(.4,0,.25,1)', fill: 'forwards'
     });
     return animation.finished.catch(() => {}).then(() => clone);
   }

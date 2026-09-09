@@ -1,8 +1,14 @@
 'use strict';
 
 const Suspense = (function () {
-  // One delivery's own animation; the gap between deliveries is the operator's next click
-  const DELIVERY_MS = 1900;
+  // Each phase of a hand-bowled delivery, in order; the gap between deliveries is the operator's next click
+  const TIMING = Object.freeze({
+    presentMs: 2000,
+    holdMs: 3000,
+    ballMs: 650,
+    dwellMs: 900,
+    returnMs: 180
+  });
 
   // The wicket falls on one of these balls, rolled fresh each round: a predictable length, unpredictable ball
   const MIN_KILL_BALL = 4;
@@ -38,7 +44,6 @@ const Suspense = (function () {
     for (let i = 0; i < killBall; i++) {
       steps.push({
         number: order[i % order.length],
-        ms: DELIVERY_MS,
         kill: i === killBall - 1
       });
     }
@@ -51,7 +56,7 @@ const Suspense = (function () {
     };
   }
 
-  return { DELIVERY_MS, MIN_KILL_BALL, MAX_KILL_BALL, drawOrder, planRound };
+  return { TIMING, MIN_KILL_BALL, MAX_KILL_BALL, drawOrder, planRound };
 })();
 
 if (typeof module !== 'undefined') module.exports = Suspense;

@@ -88,13 +88,14 @@
     const slot = el('bail-slot');
     const stumps = el('stumps');
 
-    // Uniform for every delivery, so neither the flight nor the pause hints at which ball is the wicket
-    const presentMs = Math.round(step.ms * 0.12);
-    const ballMs = Math.round(step.ms * 0.34);
-    const returnMs = Math.round(step.ms * 0.10);
-    const dwellMs = Math.max(400, step.ms - presentMs - ballMs - returnMs);
+    // Identical for every delivery, so neither the flight nor the pause hints at which ball is the wicket
+    const timing = Suspense.TIMING;
 
-    const bail = await Animation.presentToBail(cell, slot, presentMs);
+    const bail = await Animation.presentToBail(cell, slot, timing.presentMs);
+    if (Store.generation() !== startGen) return;
+
+    // The name stands at the crease while the room looks at it and the operator talks
+    await delay(timing.holdMs);
     if (Store.generation() !== startGen) return;
 
     const aim = Animation.stumpTarget(stumps);
@@ -102,7 +103,7 @@
     const wide = !step.kill && outcome.kind === 'wide';
 
     // The keyframes hold a backlift then cross the ball line at 72%, hence the duration
-    const batMs = Math.round(ballMs / 0.72);
+    const batMs = Math.round(timing.ballMs / 0.72);
     Animation.swingBat(aim, batMs, 0);
 
     // A wide passes just outside the stumps rather than halfway across the screen
@@ -112,9 +113,9 @@
       : aim;
 
     // Every ball lands on something, so every ball makes a noise; a wide only scuffs the pitch
-    const contact = setTimeout(wide ? Sound.scuff : Sound.wicket, Math.max(0, ballMs - 80));
+    const contact = setTimeout(wide ? Sound.scuff : Sound.wicket, Math.max(0, timing.ballMs - 80));
 
-    const landed = (await Animation.bowlAt(target, ballMs)) || { dx: 0, dy: 0 };
+    const landed = (await Animation.bowlAt(target, timing.ballMs)) || { dx: 0, dy: 0 };
     if (Store.generation() !== startGen) { clearTimeout(contact); return; }
 
     if (step.kill) {
@@ -129,15 +130,15 @@
       return;
     }
 
-    Animation.showOutcome(outcome.text, dwellMs + returnMs + 300);
-    const awayMs = Math.min(dwellMs, 950);
+    Animation.showOutcome(outcome.text, timing.dwellMs + timing.returnMs + 300);
+    const awayMs = Math.min(timing.dwellMs, 950);
     await Promise.all([
       Animation.ballAway(outcome.kind, landed, awayMs),
-      delay(dwellMs)
+      delay(timing.dwellMs)
     ]);
     if (Store.generation() !== startGen) return;
 
-    await Animation.returnFromBail(bail, cell, returnMs);
+    await Animation.returnFromBail(bail, cell, timing.returnMs);
   }
 
   function announceWicket(durationMs) {

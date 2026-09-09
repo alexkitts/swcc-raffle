@@ -179,11 +179,23 @@ test('the first ball of a round is not always the same player', () => {
   assert.ok(firsts.size >= 5, 'only ' + firsts.size + ' different players ever faced ball one');
 });
 
-test('every delivery carries the same duration, so none stands out', () => {
+// Timing lives in one shared table, so no delivery can be paced differently from another
+test('every delivery is paced from the same timing table', () => {
   const plan = Suspense.planRound(tickets(9), { rng: seeded(3) });
-  const durations = new Set(plan.steps.map(s => s.ms));
-  assert.strictEqual(durations.size, 1, 'durations varied: ' + [...durations].join(','));
-  assert.strictEqual(plan.steps[0].ms, Suspense.DELIVERY_MS);
+  assert.ok(plan.steps.every(s => !('ms' in s)), 'a step carried its own duration');
+  const t = Suspense.TIMING;
+  for (const phase of ['presentMs', 'holdMs', 'ballMs', 'dwellMs', 'returnMs']) {
+    assert.ok(t[phase] > 0, phase + ' is not a positive duration');
+  }
+  assert.ok(Object.isFrozen(t), 'the timing table should be frozen');
+});
+
+test('the name is presented and held before the ball, and returns quickly', () => {
+  const t = Suspense.TIMING;
+  assert.ok(t.presentMs >= 1500, 'the present should be a slow glide, got ' + t.presentMs);
+  assert.ok(t.holdMs >= 2000, 'the hold should give the room time, got ' + t.holdMs);
+  assert.ok(t.returnMs < t.presentMs, 'the return should be faster than the present');
+  assert.ok(t.ballMs < t.holdMs, 'the ball should be quicker than the wait for it');
 });
 
 test('the kill ball window is honoured when overridden', () => {
