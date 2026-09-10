@@ -5,15 +5,17 @@ const Layout = (function () {
   const EXACT_TOLERANCE = 0.9;
 
   // CSS cannot do this: auto-fit picks columns from width alone and has no way to count the tickets
-  function chooseGrid(count, width, height, gap) {
+  // maxCols caps the widest shape on offer, which is how the final stage refuses a single long row
+  function chooseGrid(count, width, height, gap, maxCols) {
     if (!(count > 0) || !(width > 0) || !(height > 0)) {
       return { cols: 1, rows: 1, cellW: width > 0 ? width : 0, cellH: height > 0 ? height : 0 };
     }
 
     const spacing = gap > 0 ? gap : 0;
+    const widest = maxCols > 0 ? Math.min(count, Math.floor(maxCols)) : count;
     const options = [];
 
-    for (let cols = 1; cols <= count; cols++) {
+    for (let cols = 1; cols <= widest; cols++) {
       const rows = Math.ceil(count / cols);
       const cellW = (width - spacing * (cols - 1)) / cols;
       const cellH = (height - spacing * (rows - 1)) / rows;

@@ -113,12 +113,13 @@
 
 /* Where a presented card comes to rest as the bail, straddling the stumps */
 /* Percentages of a smaller wicket, raised so the presented name stays the same size on screen */
+/* Wide enough for a full name at a readable size, which is the whole point of presenting it */
 .bail-slot {
   position: absolute;
   left: 50%;
-  top: -3%;
-  width: 150%;
-  height: 22%;
+  top: -5%;
+  width: 270%;
+  height: 26%;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -166,8 +167,10 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, .5);
 }
 
-.ticket--bail .ticket-name { font-size: clamp(.85rem, 1.2vw, 1.3rem); white-space: nowrap; color: var(--brown); }
-.ticket--bail .ticket-number { font-size: clamp(.95rem, 1.4vw, 1.5rem); color: var(--brown); }
+/* The ceiling only: Animation measures the name against the slot and shrinks a long one to fit */
+/* The number is dropped when even the smallest readable name will not sit beside it */
+.ticket--bail .ticket-name { font-size: clamp(.85rem, 1.9vw, 2rem); white-space: nowrap; color: var(--brown); }
+.ticket--bail .ticket-number { font-size: clamp(.95rem, 1.4vw, 1.5rem); color: var(--brown); white-space: nowrap; }
 
 /* The original card while its clone is at the crease */
 .ticket--away { opacity: .32; }
@@ -190,14 +193,22 @@
 
 /* Final stage: fewer, bigger cells showing names. */
 /* Overflow is visible so the lifted card is not clipped; the body still clips at the viewport */
-.board--final { gap: 12px; overflow: visible; }
+/* The padding absorbs the tilt on a struck-through card, which otherwise crosses the screen edge */
+.board--final { gap: 12px; overflow: visible; padding: clamp(8px, 2.4vh, 34px); }
 
-.board--final .ticket { flex-direction: column; justify-content: center; gap: .3em; padding: 6px; }
+/* A gentler tilt than the bulk board's, because these cards are many times the size */
+/* At the same angle their corners are thrown well past the edge of the screen */
+.board--final .ticket--out { transform: rotate(4deg) translateY(-4px); }
 
+/* A percentage gap, because the inherited em is sized for the bulk board's big digits */
+.board--final .ticket { flex-direction: column; justify-content: center; gap: 5%; padding: 6px; }
+
+/* The name is what the room is reading, so it leads and the number plays second fiddle */
+/* This size is only the ceiling: Render measures each name and shrinks the long ones to fit */
 .board--final .ticket-name {
   font-weight: bold;
   color: var(--brown);
-  font-size: min(calc(var(--cell-h, 6rem) * 0.15), calc(var(--cell-w, 9rem) * 0.14));
+  font-size: min(calc(var(--cell-h, 6rem) * 0.3), calc(var(--cell-w, 9rem) * 0.19));
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
@@ -205,7 +216,7 @@
 .board--final .ticket-number {
   font-weight: bold;
   color: #666;
-  font-size: min(calc(var(--cell-h, 6rem) * 0.28), calc(var(--cell-w, 9rem) * 0.24));
+  font-size: min(calc(var(--cell-h, 6rem) * 0.2), calc(var(--cell-w, 9rem) * 0.16));
   line-height: 1;
 }
 

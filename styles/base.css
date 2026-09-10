@@ -26,18 +26,27 @@ body {
 }
 
 /* A fixed screen, so the board's height depends on the viewport and never on its own contents */
+/* html as well as body: the bowler deliberately hangs below the frame */
+/* Hiding it on the body alone still left the page scrollable, and focusing the auction input */
+/* could then shunt the whole layout up and cut the bottom off */
 @media (min-width: 901px) {
+  html { overflow: hidden; }
   body { height: 100dvh; overflow: hidden; }
 }
 
+/* One column, and the board needs a height of its own */
+/* A flex-basis of 0 inside a container only as tall as its contents collapses it to nothing */
 @media (max-width: 900px) {
   body { grid-template-columns: minmax(0, 1fr); min-height: 100dvh; }
+  .main-content { min-height: 70dvh; }
+  .board { min-height: 45dvh; }
 }
 
 h1 {
   color: var(--gold);
   margin: 0;
-  font-size: clamp(1rem, 2.2vw, 1.9rem);
+  font-size: clamp(.9rem, 1.8vw, 1.7rem);
+  line-height: 1.1;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, .7);
 }
 
@@ -49,17 +58,20 @@ h1 {
   min-width: 0;
 }
 
+/* Kept short on purpose: every pixel here comes straight off the board below it */
+/* On a laptop screen the header was taking a third of the height and squashing the final cards */
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--gap);
   width: 100%;
 }
 
-.logo { width: 90px; height: 90px; object-fit: contain; border-radius: 8px; }
+.logo { width: clamp(44px, 5vw, 72px); aspect-ratio: 1; object-fit: contain; border-radius: 8px; }
 
-.controls { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.controls { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+.controls button, .controls .btn { font-size: clamp(.72rem, .85vw, .9rem); padding: 5px 8px; }
 
 .bowl-row { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
 .bowl-row label { color: var(--gold); font-size: .95rem; }

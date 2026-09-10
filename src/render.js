@@ -68,16 +68,44 @@ const Render = (function () {
     builtFor = signatureOf(state);
   }
 
+  // Ten names strung across one row are too small to read from the back of the room, so the final
+  // board is capped at five columns and takes two rows instead
+  const FINAL_MAX_COLS = 5;
+
+  // Below this a name is unreadable anyway, so let it clip rather than shrink into nothing
+  const MIN_NAME_PX = 9;
+
   // Fills the board box at any ticket count; must run after paintControls, which changes that box
   function fitBoard() {
     const board = el('board');
     if (!board || !cells.size) return;
+    const final = board.classList.contains('board--final');
     const gap = parseFloat(getComputedStyle(board).gap) || 0;
-    const grid = Layout.chooseGrid(cells.size, board.clientWidth, board.clientHeight, gap);
+    const grid = Layout.chooseGrid(
+      cells.size, board.clientWidth, board.clientHeight, gap, final ? FINAL_MAX_COLS : 0
+    );
     board.style.setProperty('--cols', grid.cols);
     board.style.setProperty('--rows', grid.rows);
     board.style.setProperty('--cell-w', grid.cellW + 'px');
     board.style.setProperty('--cell-h', grid.cellH + 'px');
+    if (final) fitNames();
+  }
+
+  // The cells are sized from the box, but names are not: a long one is measured down until it fits
+  function fitNames() {
+    cells.forEach(cell => {
+      const name = cell.querySelector('.ticket-name');
+      if (!name) return;
+
+      // Whole words first: a surname split across two lines reads worse than a smaller card
+      name.style.overflowWrap = 'normal';
+      Fit.toBox(cell, name, Fit.ceilingOf(name), MIN_NAME_PX);
+      if (Fit.fits(cell)) return;
+
+      // One word too long even at the floor, so break it rather than run over the card's edge
+      name.style.overflowWrap = 'anywhere';
+      Fit.toBox(cell, name, Fit.ceilingOf(name), MIN_NAME_PX);
+    });
   }
 
   // Stable within a board mode, so the board rebuilds exactly twice per draw
@@ -237,7 +265,7 @@ const Render = (function () {
   }
 
   return {
-    mount, apply, cellFor, fitBoard,
+    mount, apply, cellFor, fitBoard, MIN_NAME_PX,
     showLoadSummary, showError, showStorageWarning, showResumePrompt
   };
 })();

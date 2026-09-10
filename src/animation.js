@@ -198,6 +198,32 @@ const Animation = (function () {
     { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' }
   ];
 
+  // Below this the bail reads as a smudge from the back of the room, so the number goes instead
+  const BAIL_MIN_NAME_PX = 13;
+
+  // Once the number has already gone, a small name still beats a clipped one
+  const BAIL_FLOOR_PX = 9;
+
+  // The bail is a fixed slot on the stumps, so a long name is measured down to fit rather than
+  // clipped; when even the smallest readable name will not sit next to the number, the number goes
+  function fitBail(clone, box) {
+    clone.style.left = box.left + 'px';
+    clone.style.top = box.top + 'px';
+    clone.style.width = box.width + 'px';
+    clone.style.height = box.height + 'px';
+
+    const name = clone.querySelector('.ticket-name');
+    const number = clone.querySelector('.ticket-number');
+    if (!name) return;
+
+    const ceiling = Fit.ceilingOf(name);
+    Fit.toBox(clone, name, ceiling, BAIL_MIN_NAME_PX);
+    if (Fit.fits(clone) || !number) return;
+
+    number.hidden = true;
+    Fit.toBox(clone, name, ceiling, BAIL_FLOOR_PX);
+  }
+
   // A clone flies to the crease so the grid never reflows, and its text lays out at bail size
   function presentToBail(cell, slot, ms) {
     if (!cell || !slot) return Promise.resolve(null);
@@ -211,6 +237,9 @@ const Animation = (function () {
     clone.style.margin = '0';
     clone.style.zIndex = '7';
     overlays().appendChild(clone);
+
+    // Measured at its destination size, before the flight starts, so the name never resizes mid-air
+    fitBail(clone, end);
 
     cell.classList.add('ticket--away');
 

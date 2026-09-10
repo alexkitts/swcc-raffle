@@ -1,10 +1,13 @@
 #overlays { position: fixed; inset: 0; pointer-events: none; z-index: 1000; }
 #overlays > * { pointer-events: auto; }
 
+/* Centred on its own anchor, so 7% of a short screen puts half the popup above the top edge */
+/* The floor keeps it on screen, and the width cap wraps a long dismissal instead of running wide */
 .wicket-popup {
   position: fixed;
-  top: 7%;
+  top: max(7%, 100px);
   left: 60%;
+  max-width: min(46vw, 560px);
   transform: translate(-50%, -50%) scale(0);
   background: #f00;
   color: #fff;
@@ -37,7 +40,10 @@
   transform: translate(-50%, -50%);
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
   color: #fff;
-  padding: 40px 60px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: clamp(16px, 4vh, 40px) clamp(20px, 4vw, 60px);
   border-radius: 20px;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, .8);
@@ -47,16 +53,17 @@
   animation: winnerEntrance 2s ease-out forwards, winnerJiggle 3s ease-in-out 2s infinite;
 }
 
-.winner-banner .trophy { font-size: clamp(4rem, 9vw, 7.5rem); margin-bottom: 20px; animation: trophyBounce 2s infinite; }
-.winner-banner .winner-text { font-size: clamp(2rem, 4vw, 3rem); font-weight: bold; letter-spacing: 3px; margin-bottom: 15px; }
+.winner-banner .trophy { font-size: clamp(2.5rem, 9vh, 7.5rem); margin-bottom: clamp(6px, 2vh, 20px); animation: trophyBounce 2s infinite; }
+.winner-banner .winner-text { font-size: clamp(1.5rem, 4vw, 3rem); font-weight: bold; letter-spacing: 3px; margin-bottom: clamp(6px, 1.6vh, 15px); }
 .winner-banner .winner-details {
-  font-size: clamp(1.3rem, 2.6vw, 2rem);
+  font-size: clamp(1.1rem, 2.6vw, 2rem);
   font-weight: bold;
   color: var(--brown);
   background: rgba(255, 255, 255, .9);
-  padding: 15px 25px;
+  padding: clamp(8px, 1.6vh, 15px) 25px;
   border-radius: 10px;
-  margin-top: 20px;
+  margin-top: clamp(8px, 2vh, 20px);
+  overflow-wrap: anywhere;
 }
 
 @keyframes winnerEntrance {
@@ -87,18 +94,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 12px;
 }
 
+/* Ten long names on a short laptop screen overflow the box, so the card scrolls */
+/* Otherwise it runs off the top and bottom of the screen with the buttons out of reach */
 .auction-content {
   background: linear-gradient(145deg, var(--gold), #ff8f00);
   color: var(--brown);
-  padding: 40px;
+  padding: clamp(14px, 2.6vh, 34px) clamp(16px, 2.4vw, 40px);
   border-radius: 25px;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
   border: 4px solid var(--brown);
   max-width: 800px;
   width: 95%;
+  max-height: 100%;
+  overflow-y: auto;
   animation: auctionSlideIn .5s ease-out forwards;
 }
 
@@ -107,17 +119,23 @@
   100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-.auction-content h2 { margin-top: 0; font-size: clamp(1.5rem, 3.4vw, 2.6rem); color: var(--brown); }
-.auction-content p { font-size: clamp(1rem, 1.8vw, 1.5rem); margin: 16px 0; }
+/* Sized to keep the heading on one line inside the card: a wrapped one costs a row of names */
+.auction-content h2 {
+  margin: 0 0 clamp(6px, 1.4vh, 16px);
+  font-size: clamp(1.1rem, 2.5vw, 2rem);
+  color: var(--brown);
+}
+
+.auction-content p { font-size: clamp(.95rem, 1.8vw, 1.5rem); margin: clamp(8px, 1.6vh, 16px) 0; }
 
 .auction-content input {
   width: 80%;
-  padding: 16px;
+  padding: clamp(8px, 1.6vh, 16px);
   font-size: clamp(1rem, 1.6vw, 1.3rem);
   border: 3px solid var(--brown);
   border-radius: 10px;
   text-align: center;
-  margin: 16px 0;
+  margin: clamp(8px, 1.4vh, 16px) 0;
   font-family: var(--mono);
   background: rgba(255, 255, 255, .9);
 }
@@ -125,18 +143,18 @@
 .auction-content input:focus { outline: none; border-color: #4caf50; background: #fff; }
 
 .auction-table {
-  margin: 16px auto;
+  margin: clamp(8px, 1.6vh, 16px) auto;
   border-collapse: collapse;
   width: 100%;
   max-width: 600px;
-  font-size: clamp(1rem, 1.8vw, 1.6rem);
+  font-size: clamp(.9rem, 1.8vw, 1.6rem);
   background: rgba(255, 255, 255, .95);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .auction-cell {
-  padding: 10px 20px;
+  padding: clamp(4px, 1vh, 10px) clamp(8px, 1.4vw, 20px);
   text-align: center;
   border: 2px solid var(--brown);
   font-weight: bold;
@@ -144,8 +162,15 @@
   word-break: break-word;
 }
 
-.auction-buttons { display: flex; justify-content: center; gap: 20px; margin-top: 16px; }
-.auction-buttons button { padding: 14px 28px; font-size: clamp(1rem, 1.5vw, 1.3rem); border: none; }
+.auction-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 20px);
+  margin-top: clamp(8px, 1.6vh, 16px);
+}
+
+.auction-buttons button { padding: clamp(8px, 1.6vh, 14px) 28px; font-size: clamp(1rem, 1.5vw, 1.3rem); border: none; }
 #auction-confirm { background: #4caf50; color: #fff; }
 #auction-cancel { background: #f44336; color: #fff; }
 
@@ -175,8 +200,9 @@
 /* Lighter than a wicket popup, because the batsman survived */
 .outcome-popup {
   position: fixed;
-  top: 20%;
+  top: max(20%, 80px);
   left: 50%;
+  max-width: min(70vw, 900px);
   transform: translate(-50%, -50%);
   background: rgba(20, 14, 8, .9);
   color: var(--gold);

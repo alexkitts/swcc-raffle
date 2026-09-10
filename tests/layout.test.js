@@ -112,3 +112,40 @@ test('a board taller than it is wide gives more rows than columns', () => {
   const g = Layout.chooseGrid(100, 500, 1200, GAP);
   assert.ok(g.rows > g.cols, 'got ' + g.cols + 'x' + g.rows);
 });
+
+// The final board is short and wide, so without a cap the ten names land in one unreadable row
+test('a column cap keeps the final ten off a single row in a short board', () => {
+  const uncapped = Layout.chooseGrid(10, 941, 116, 12);
+  assert.deepStrictEqual({ cols: uncapped.cols, rows: uncapped.rows }, { cols: 10, rows: 1 });
+
+  const capped = Layout.chooseGrid(10, 941, 116, 12, 5);
+  assert.deepStrictEqual({ cols: capped.cols, rows: capped.rows }, { cols: 5, rows: 2 });
+});
+
+test('the cap is a ceiling, not a target: a tall board still takes fewer columns', () => {
+  const g = Layout.chooseGrid(10, 400, 1200, GAP, 5);
+  assert.ok(g.cols <= 5, 'got ' + g.cols + ' columns');
+  assert.ok(g.rows >= g.cols, 'got ' + g.cols + 'x' + g.rows);
+});
+
+test('a cap never leaves a ticket without a cell', () => {
+  for (let n = 1; n <= 30; n++) {
+    for (const cap of [1, 2, 5]) {
+      const g = Layout.chooseGrid(n, BOARD_W, BOARD_H, GAP, cap);
+      assert.ok(g.cols <= cap, n + ' tickets exceeded a cap of ' + cap);
+      assert.ok(g.cols * g.rows >= n, n + ' tickets did not fit in ' + g.cols + 'x' + g.rows);
+    }
+  }
+});
+
+test('cells still span the board exactly under a cap', () => {
+  const g = Layout.chooseGrid(10, 941, 116, 12, 5);
+  assert.ok(Math.abs(g.cellW * g.cols + 12 * (g.cols - 1) - 941) < 0.01, 'columns do not span the board');
+  assert.ok(Math.abs(g.cellH * g.rows + 12 * (g.rows - 1) - 116) < 0.01, 'rows do not span the board');
+});
+
+test('a cap of zero or nothing at all leaves the choice unchanged', () => {
+  const plain = Layout.chooseGrid(130, BOARD_W, BOARD_H, GAP);
+  assert.deepStrictEqual(Layout.chooseGrid(130, BOARD_W, BOARD_H, GAP, 0), plain);
+  assert.deepStrictEqual(Layout.chooseGrid(130, BOARD_W, BOARD_H, GAP, 999), plain);
+});
